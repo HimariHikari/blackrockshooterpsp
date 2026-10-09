@@ -275,6 +275,16 @@ fn see(camera: Single<&Transform, With<FollowCamera>>, state: Res<FieldState>, m
     }
 }
 
+/// The place the effect a character is has in the order of drawing: the field
+/// draws its characters one after another, those a script has given a number
+/// (setting 123) by their numbers, the lower first (0x116B38, as each is put
+/// into the list the field draws from, 0x116BC0), and the rest the further from
+/// the camera first. The port has those with a number drawn in their order
+/// after those with none, which are drawn by how far they are.
+fn order_of(character: &Character) -> u32 {
+    if character.flags.has(flag::ORDERED) { character.drawn_order.max(0) as u32 + 1 } else { 0 }
+}
+
 /// Which lens the effect a character is is drawn through: the scene's, or the
 /// one that sees from just before the camera for a character that asks for it
 /// (its flag 0xA7: 0x103010, 0x103094).
@@ -421,6 +431,7 @@ fn of_characters(
         playing.place(put(character, effect, &models));
         playing.unseen = !character.drawn();
         playing.lens = lens_of(character);
+        playing.order = order_of(character);
         // As much of a frame as the character has of one (0x103428).
         playing.give(SIXTIETHS_PER_STEP * character.pace_fraction());
     }
@@ -430,6 +441,7 @@ fn of_characters(
         playing.place(put(character, effect, &models));
         playing.unseen = !character.drawn();
         playing.lens = lens_of(character);
+        playing.order = order_of(character);
         // The character is there when its effect is over, until a script takes
         // it away.
         playing.stays = true;

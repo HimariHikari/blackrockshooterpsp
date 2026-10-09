@@ -48,6 +48,9 @@ const SHADER: Handle<Shader> = uuid_handle!("4b7a2f90-1d3e-4c86-b5a1-9e0f6d2c7a1
 const TURN_DEPTH: f32 = 100_000.0;
 /// What being of the scene's last draw list counts for: more than any turn.
 const ON_TOP_DEPTH: f32 = 20_000_000.0;
+/// What a place in an order that whoever plays the effects has given them counts
+/// for: more than the turns of an effect's emitters, of which there are few.
+const ORDER_DEPTH: f32 = 2_000_000.0;
 
 /// The layer the particles that are fixed to the screen are drawn in when their
 /// effect is of a scene's first draw list: for a camera of that scene's, which
@@ -319,6 +322,10 @@ pub struct Playing {
     pub stays: bool,
     /// Which lens what it has in the world is drawn through.
     pub lens: Lens,
+    /// Its place among the effects whose order of drawing has been given: one of
+    /// a higher number is drawn after one of a lower, however far each is, and
+    /// all of them after those that have none (nought).
+    pub order: u32,
 }
 
 /// Which lens an effect in the world is drawn through, where whoever plays it
@@ -353,7 +360,7 @@ impl Playing {
     /// is told to its effect the first time it is drawn (0xA5CA0).
     fn new(mut effect: Effect, file: Arc<EffectFile>) -> Playing {
         effect.place(Mat4::IDENTITY);
-        Playing { effect, file, shown: Vec::new(), waiting: 0.0, had: 0.0, begun: false, put: true, hidden: false, unseen: false, still: false, on_top: false, behind: None, apart: None, stays: false, lens: Lens::Whole }
+        Playing { effect, file, shown: Vec::new(), waiting: 0.0, had: 0.0, begun: false, put: true, hidden: false, unseen: false, still: false, on_top: false, behind: None, apart: None, stays: false, lens: Lens::Whole, order: 0 }
     }
 
     /// Puts it by a matrix (0xA5E20).
@@ -442,6 +449,8 @@ pub struct EffectMaterial {
     screen: bool,
     /// The lens it is drawn through, and how far and from how near that sees.
     lens: Lens,
+    /// Its effect's place in an order of drawing that was given, or nought.
+    order: u32,
     #[uniform(2)]
     reach: Vec4,
 }
@@ -494,7 +503,7 @@ impl Material for EffectMaterial {
     /// far a thing is: all the effects after everything else, and an emitter after
     /// those whose turn is before its own.
     fn depth_bias(&self) -> f32 {
-        TURN_DEPTH * (1 + self.turn) as f32 + if self.on_top { ON_TOP_DEPTH } else { 0.0 }
+        TURN_DEPTH * (1 + self.turn) as f32 + ORDER_DEPTH * self.order as f32 + if self.on_top { ON_TOP_DEPTH } else { 0.0 }
     }
 
     fn enable_prepass() -> bool {
@@ -552,7 +561,7 @@ impl Material for EffectMaterial {
 /// The materials the particles are drawn with: one for each picture, way of mixing,
 /// turn and lens.
 #[derive(Resource, Default)]
-struct Materials(HashMap<(Option<AssetId<Image>>, Mixing, usize, Lens), Handle<EffectMaterial>>);
+struct Materials(HashMap<(Option<AssetId<Image>>, Mixing, usize, Lens, u32), Handle<EffectMaterial>>);
 
 /// Gives the materials of the lenses that do not see all how near and how far
 /// those see, whenever that changes or there is another material.
@@ -730,13 +739,13 @@ fn show(
             on_screen |= instance.screen && playing.behind.is_none();
             // What is on the screen is before no lens.
             let lens = if instance.screen { Lens::Whole } else { playing.lens };
-            let key = (instance.picture.as_ref().map(Handle::id), instance.mixing, instance.turn, lens);
+            let key = (instance.picture.as_ref().map(Handle::id), instance.mixing, instance.turn, lens, playing.order);
             let material = materials
                 .0
                 .entry(key)
                 .or_insert_with(|| {
                     let Mixing { blend, plain, on_top, behind, screen } = instance.mixing;
-                    effect_materials.add(EffectMaterial { picture: instance.picture.clone(), blend, plain, turn: instance.turn, on_top, behind, screen, lens, reach: Vec4::ZERO })
+                    effect_materials.add(EffectMaterial { picture: instance.picture.clone(), blend, plain, turn: instance.turn, on_top, behind, screen, lens, order: playing.order, reach: Vec4::ZERO })
                 })
                 .clone();
             let transform = transform_of(&instance.matrix);
@@ -786,7 +795,7 @@ mod tests {
     use super::*;
 
     fn material(lens: Lens) -> EffectMaterial {
-        EffectMaterial { picture: None, blend: Blend::Over, plain: false, turn: 0, on_top: false, behind: false, screen: false, lens, reach: Vec4::ZERO }
+        EffectMaterial { picture: None, blend: Blend::Over, plain: false, turn: 0, on_top: false, behind: false, screen: false, lens, order: 0, reach: Vec4::ZERO }
     }
 
     /// The field's lenses (0xD9D54): the scene's sees from its near figure to its

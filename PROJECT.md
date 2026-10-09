@@ -75,9 +75,13 @@ Last brought up to date: 9 October 2026.
       title's alone; the title has its own, the save list its own sheet
 - [ ] The port's windows have their frame before the script's, the original's
       after it (a frame's difference at the most)
-- [ ] The field's flag 0x55 and the jingle's stream at a mission cleared
-- [ ] A light's kind, place and angles kept from the map before
-- [ ] The order of drawing of characters (setting 123)
+- [x] The field's flag 0x55 and the jingle's stream at a mission cleared: the
+      flag is the window's being there, and the jingle's file has nowhere to
+      go round from, so it is heard once as in the port
+- [x] A light's kind, place and angles kept from the map before: no script
+      leaves them unsaid for a light that lights anyone
+- [x] The order of drawing a script gives the effects of a scene (setting 123;
+      tried, not yet compared with the walkthrough's opening)
 - [ ] Which model kinds are not asked how near the camera they are
 - [x] Battle: the sight of the skills that snipe and the log's lines: looked
       into, all in (the one line never written, "No longer Overheated.", the

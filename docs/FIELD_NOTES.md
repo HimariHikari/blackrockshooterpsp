@@ -234,7 +234,7 @@ so far:
 | 117, 118 | ints 0xB and 0xC: the face it is to go over to and in how many frames, which `s132(id, 12)` has it do (`shift_face`) |
 | 119 | int 0xD, set to 3 with every face a scene has one go over to (1187 times); nothing found reads it |
 | 122 | int 0x11 and flag 0xA5: the tile with the chevron stands by its mark (0x10A854, 0x46CD0; see "The marks over characters"). A mission's script sets it for the enemy it is after (`flag::POINTED_OUT`) |
-| 123 | int 0x12 and flag 0xA6: its turn among those that are drawn in a set order (0x116B38: of two characters the one with the lower number first if the first has one, else the further from the camera first) |
+| 123 | int 0x12 and flag 0xA6: its turn among those that are drawn in a set order (0x116B38: of two characters the one with the lower number first if the first has one, else the further from the camera first; asked as each character is put into the list the field draws them from, 0x116BC0 from 0x115408). 70 times in 13 maps, 50 of them in the first map's opening, always for a character that is an effect and has setting 124 too. In the port the effects of those with a number are drawn in their order after those with none (`Character::drawn_order`, `order_of` in `field/effects.rs`, `Playing::order`) |
 | 124 | flag 0xA7: the effects it carries (its + 0x510, drawn by 0x102FD4 and 0x103074) are drawn by the lens that sees from one unit before the camera on (the camera's + 0x150), rather than the scene's own (0xE7568). 164 times in 55 maps, for the enemies of a story scene. `Lens::Close` of `brs_engine::effects`, by `lens_of` in `field/effects.rs` |
 | 126 | the character a symbol is after (int 0x18) |
 | 129 | how far away a symbol notices its target (decimal 0x2A) |
@@ -742,8 +742,8 @@ In the port: `scene::EffectOf` on a `Character` (`of_effect`, `begin_effect`),
 `field/staging.rs`, and `of_characters` in `field/effects.rs`, which plays the
 file's effect where the character has it, a frame for each of the character's,
 drawn while the character is not hidden (`Playing::unseen`). Not ported: the
-other seven effects and the fades (nothing uses them) and the order of drawing
-(setting 123). Setting 124's lens is in "Its lenses".
+other seven effects and the fades (nothing uses them). Setting 123's order of
+drawing is in the table of settings, and setting 124's lens in "Its lenses".
 
 ## Touching and looking
 
@@ -2882,9 +2882,11 @@ In the port: `field/scenery.rs` reads the lights from the scene's script
 `Scene::light_characters` is the ray and the colours each frame (`scene::Lit`,
 by `CollisionWorld::marks`); and the models of the field's characters, with
 what they carry, are drawn by `brs_engine::lit` (`lit.wgsl`), which has the
-PSP's sum at every point of a face, not at its corners alone. Not ported: the
-kind, place and angles a light keeps from the map before where a map's script
-does not say them.
+PSP's sum at every point of a face, not at its corners alone. A light's kind,
+place and angles are not put back as a map starts, so one that a script left
+unsaid would have the map before's; no script leaves them unsaid for a light a
+character is lit by (`Light::UNSET` in `field/scenery.rs` says so), so the
+port, which has every light begin unset, shows the same.
 
 Before the scene is drawn (0x10E6A0) the PSP's fog is switched on with those
 figures if the flag is set, off if not. What the field starts with (0x118170) is a
@@ -3301,8 +3303,17 @@ video lets that be seen, and the colours of the strip and of the tinted sheet
 within a few units (`docs/compare/mission_complete_vs_walkthrough.png`,
 `mission_complete_words_vs_walkthrough.png`). In the video it comes at 953.3 s
 and the frames of its layout are the video's sixtieths: the words go up at
-954.77 and the rest has come by 955.2. Not ported: the field's flag 0x55, and
-what 0xA5A8 does to the jingle's stream once it plays.
+954.77 and the rest has come by 955.2. The field's flag 0x55 says no more than
+that the window's task is there: it is set as the window is opened (0xEDC5C),
+the field's frame unmakes the task once it is done and clears the flag
+(0xEDA48 to 0xEDA80), and a system function reads it for the script to wait
+by (0xD5D24); the port's `Scene::cleared` is that. Once the jingle plays, the
+task has its stream go round for good (0x4A7D4: 0xA5A8 with stream 0 and 1,
+which is 0x11EE8, the stream's bit 2 and the library's call at 0x164890 with
+-1); but the jingle (`jin_pack.bin/000.riff`) has no place to go round from in
+its file, so it is heard once, as in the port. (Of the five jingles only 001
+and 002 have such a place, and a recording that has one goes round in the
+port whoever plays it.)
 
 ## The sign that names a place
 

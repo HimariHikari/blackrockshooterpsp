@@ -789,6 +789,9 @@ pub struct Character {
     /// [`Scene::reach_characters`] last found.
     pub asleep: bool,
     pub unseen: bool,
+    /// Its turn among the characters that are drawn in an order a script gives
+    /// (its int 0x12, at its + 0x4FC, with its flag 0xA6: setting 123).
+    pub drawn_order: i32,
     /// What cross and square do with it when she is by it (the first two records
     /// of its contact), and whether a button does anything with it at all (the
     /// contact's flag 0).
@@ -1288,6 +1291,7 @@ impl Character {
             shadow_offset: Vec3::ZERO,
             asleep: false,
             unseen: false,
+            drawn_order: 0,
             // As it is made (0xE1920): cross talks to it.
             prompts: [Prompt::of(prompt::TALK), Prompt::NONE],
             by_action: true,
@@ -1954,7 +1958,10 @@ impl Character {
             setting::NO_LAYERS => self.flags.set(flag::NO_LAYERS, on),
             setting::POINTED_OUT => self.flags.set(flag::POINTED_OUT, on),
             setting::SIGN => self.give_sign(),
-            setting::DRAWN_ORDER => self.flags.set(flag::ORDERED, value >= 0),
+            setting::DRAWN_ORDER => {
+                self.flags.set(flag::ORDERED, value >= 0);
+                self.drawn_order = value;
+            }
             setting::CLOSE_LENS => self.flags.set(flag::CLOSE_LENS, on),
             setting::FACE => self.show_face(value, 0),
             setting::TOUCHABLE => self.flags.set(flag::TOUCHABLE, on),
