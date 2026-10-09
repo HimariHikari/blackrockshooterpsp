@@ -73,10 +73,16 @@ Last brought up to date: 9 October 2026.
 - [ ] A light's kind, place and angles kept from the map before
 - [ ] The order of drawing of characters (setting 123)
 - [ ] Which model kinds are not asked how near the camera they are
-- [ ] Battle: the sight of two skills, the log's lines of her own states
+- [x] Battle: the sight of the skills that snipe and the log's lines: looked
+      into, all in (the one line never written, "No longer Overheated.", the
+      original never writes either)
+- [ ] Battle: the enemies' marks while she has the stage and some of them are
+      shown again; the depth figures of the scope's camera
 - [ ] Battle: an enemy's effects standing still in hit stop
-- [ ] Battle: the remarks at about lines 762, 1743, 2363, 2471, 2558, 2639 and
-      3054 of `BATTLE_NOTES.md`
+- [ ] Battle: the effect's show of a status effect given (its sound is in)
+- [ ] Battle: how the picture is drawn while the effect of a battle of note
+      plays (a strip of triangles from the picture kept, 0x11AF48)
+- [ ] Battle: the sky's own near and far planes (no boss's script asks for them)
 - [ ] Menu: the sign of loading and the frozen picture (`MENU_NOTES.md`)
 - [ ] `FORMAT_NOTES.md`, "Not done"
 - [ ] What the field's flag 0x50 does to the camera (misread once; to be read again)

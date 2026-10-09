@@ -666,9 +666,14 @@ Compared with the walkthrough in `docs/compare/battle_display.png`,
 defence raised and its line, 41:21 to 41:23 of the video: her first mark is
 within half a pixel of the original's; `status_marks_port.png` has two marks on
 everybody). The marks are in their order from the frame an effect is given.
-Not ported: the sight of the two skills, and the log's lines of her own states
-other than the skills that help her. The results of a battle won are under "How a battle begins
-and ends".
+The sight of the skills that snipe and the log's lines came later (see "Her
+skills" and `battle/log.rs`). Looked into on 2026-10-09: every line of the
+table that anything writes is written in the port: 1 to 5 and the moves' names
+by the enemies' scripts (engine function 80), 6 and 7 as a part breaks and
+mends, 8 as a snipe finds nothing, her skills' own by their records, and the
+status effects' by theirs. Line 3301 ("No longer Overheated.") is in no
+record and no code loads its number: the game never writes it. The results of
+a battle won are under "How a battle begins and ends".
 
 ## Data tables behind a battle
 
@@ -2366,8 +2371,8 @@ the log's line and the ATK mark), Attack-Free and Sway Three over fourteen
 bursts and dodges (three spared), Danger Guard with a guard begun two frames
 before a bullet lands (`--script "wait:3.7,cross:2"` against group 2: "her guard
 be that of status effect 501", the hit takes 0 for 1), Aftercare after a battle
-won at level 50 (616 of 2465 HP). Not ported: Six Pocket, which waits for
-items, and the two effects (998045, 998042).
+won at level 50 (616 of 2465 HP). Six Pocket and the two effects (998045,
+998042) came with her items (`PcActor::use_item`, `auto::EFFECT`).
 
 Three more records sit with these in the table. 39 Treasure Hunt and 41, which
 has no name, are of kind 3 and add to figures that her four are not (figure 6

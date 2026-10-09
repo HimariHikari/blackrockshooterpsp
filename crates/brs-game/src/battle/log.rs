@@ -12,7 +12,8 @@
 //! In the port the enemies' scripts write to it (engine function 80, 0xBE418), their
 //! parts that break and mend (0x85CBC), and the status effects as they are given
 //! and as their time runs out (0x8DE7C, 0x8DEF8; `status.rs` keeps those lines for
-//! it). Not yet: what the player's own states and her skills write.
+//! it), her skills as their scenes have them say their lines, and a snipe that
+//! finds nothing. Nothing else writes to it.
 
 use std::collections::{HashMap, VecDeque};
 
