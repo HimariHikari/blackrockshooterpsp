@@ -1,0 +1,62 @@
+BLACK ROCK SHOOTER: THE GAME - the PC port
+==========================================
+
+This is a new program that plays the PSP game on a PC. It has none of the
+game in it: it reads the game from a disc image (.iso) of your own copy.
+The port was made against the US release (NPUH-10126).
+
+You need no command line and nothing else installed.
+
+
+SETTING IT UP (once)
+--------------------
+
+1. Have the disc image (.iso) of your copy of the game somewhere on the PC.
+
+2. Drag the .iso onto  brs-setup.exe  (or just double-click brs-setup.exe
+   and choose the .iso in the window that opens).
+
+3. A window asks for a folder: choose or make the folder you want the game
+   in. It takes about 1.5 GB.
+
+4. Wait. A black window says what it is doing:
+     1 of 4  the films are copied
+     2 of 4  the data is unpacked              (under a minute)
+     3 of 4  the music and voices are made playable   (the long part:
+             it can take a good while)
+     4 of 4  the game is put in the folder
+   If the PC has no "ffmpeg" (the program that decodes the game's sound),
+   the setup fetches it by itself from gyan.dev (about 115 MB) into the
+   folder you chose. That needs the internet, this once.
+
+5. When it says "Done", press Enter to close the window.
+
+It can be closed and started again at any time for the same folder: it
+goes on where it was. Your .iso is only read, never changed.
+
+
+PLAYING
+-------
+
+Open the folder you chose and double-click  brs-game.exe .
+
+   Stick or WASD ........ move
+   Arrow keys / mouse ... camera
+   A controller works too.
+
+Saves are kept in the "save" folder beside the game.
+
+
+IF SOMETHING GOES WRONG
+-----------------------
+
+"this is not a disc image"
+    The file is not an .iso. A compressed one (.cso) has to be made an
+    .iso first (the emulator PPSSPP can do that, for one).
+
+No sound
+    Step 3 did not finish, or ffmpeg could not be fetched. Run the setup
+    again for the same folder.
+
+Windows warns about an unknown program
+    The programs are not signed. "More info" > "Run anyway" starts them.

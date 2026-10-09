@@ -1,0 +1,41 @@
+# Builds the port for Windows and bundles what a player needs: the game, the
+# setup program and how to use them. None of the game's data is in it.
+#
+# It runs when asked for by hand (Actions > Build > Run workflow), which leaves
+# the bundle with the run to be downloaded, and for every tag that begins with
+# "v", which also puts the bundle on a release of that name.
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # The profile the port is worked on and played with.
+      - name: Build the game and the setup program
+        run: cargo build -p brs-game -p brs-extract
+      - name: Bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory bundle | Out-Null
+          Copy-Item target/debug/brs-game.exe, target/debug/brs-setup.exe, HOW-TO-PLAY.txt bundle/
+          Compress-Archive -Path bundle/* -DestinationPath brs-pc-port-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brs-pc-port-windows
+          path: brs-pc-port-windows.zip
+      - name: Put it on the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: brs-pc-port-windows.zip

@@ -6,30 +6,43 @@ code for the original, so this is a new engine that reads the original data file
 The game data is **not** part of this project. It is read from your own copy of the
 game, kept locally under `game/`, which is ignored by git.
 
-## Setting it up from your own disc
+## Playing it
 
-The repository has the code only. To play you need a disc image (`.iso`) of your own
-copy of the game (the port was made against the US release, NPUH-10126), a Rust
-toolchain, and [ffmpeg](https://ffmpeg.org) on the `PATH` for the sound.
+No command line and nothing to install: see [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt).
+In short:
+
+1. Take `brs-pc-port-windows.zip` from this project's **Releases** page and unzip it.
+   It has the game (`brs-game.exe`), the setup program (`brs-setup.exe`) and the
+   how-to; none of the game itself.
+2. Drag the disc image (`.iso`) of your own copy of the game onto `brs-setup.exe`,
+   or double-click `brs-setup.exe` and choose the `.iso` in the window that opens.
+   The port was made against the US release (NPUH-10126).
+3. Choose the folder to make the game in (about 1.5 GB) in the window that asks.
+4. Wait while it copies the films, unpacks the data (under a minute), makes the
+   music and voices playable (the long part) and puts the game in the folder. The
+   sound is decoded by [ffmpeg](https://ffmpeg.org): if the PC has none, the setup
+   fetches it by itself (about 115 MB, from gyan.dev) into the folder.
+5. Open the folder and double-click `brs-game.exe`.
+
+The setup can be closed and started again for the same folder: it goes on where it
+was. The `.iso` is only read. None of the game's data is in this repository, and
+none should be put in it.
+
+## Building it yourself
+
+The bundle on the Releases page is built by GitHub from this source
+(`.github/workflows/build.yml`: by hand from the Actions tab, and for every tag that
+begins with `v`, which makes a release of it). To build on your own PC you need
+[Rust](https://rustup.rs) with its C++ build tools, and then either double-click
+`build.cmd` or run
 
 ```bash
 cargo build -p brs-game -p brs-extract
 ```
 
-That makes `brs-setup` and `brs-game` in `target/debug`. Then drop the `.iso` on
-`brs-setup` (on Windows: drag it onto `brs-setup.exe`), or run
-
-```bash
-target/debug/brs-setup path/to/game.iso path/to/a/folder
-```
-
-Dropped on, it asks for the folder to make the port in. Into that folder it unpacks
-the game's data (about 670 MB; half a minute), copies the films and the icon from
-the disc, has ffmpeg make the recordings playable (that takes a good while longer;
-it can be stopped and run again for the same folder, and `--no-sound` leaves it
-out), and puts `brs-game` there. Start the game from that folder. Nothing of the
-disc image is changed. None of the game's data is in this repository, and none
-should be put in it.
+That makes `brs-game` and `brs-setup` in `target/debug`; `brs-setup` is used as
+above, or from a command line as `brs-setup game.iso folder` (`--no-sound` leaves the
+sound out, `--jobs <n>` has it decode so many recordings at once).
 
 ## Layout
 
