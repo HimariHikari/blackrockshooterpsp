@@ -1646,6 +1646,22 @@ to (471, 261)); 2 is ten higher (0x55FC8, 0x605D4) and 1 the layout's own place
 (0x36154), which is where a battle has it, over the gauge of her heat (an entry
 of kind 9, set 7, 0x3DBE8). When she is hit in a battle the gauge plays set 1,
 a flash of 16 frames (0x3DB94, from 0x357E8), unless the object's + 0x7C is set.
+Set 1 is played over what the gauge has (0x319BC): it has one track for the
+glow, one for "HP" and one for the number, which take over the first of each
+of those groups' two tracks, the ones drawn while she is well, so in danger
+nothing of it is seen: the glow comes to 150 at the second frame and is gone
+at the sixteenth, "HP" and the number go amber (255, 229, 124) and all there
+and back. 0x357E8 puts up what a hit takes off, an enemy's as well as hers,
+and asks for the flash where the number is over nought and the numbers'
+object is not marked (its + 0x7C, 0x3D814): each actor has its own (hers at
+her + 0x808, an enemy's at its + 0xA28), and an enemy's is marked as it is
+made (0x91E10 with 1) where hers is not (0x99B7C with nought). So only what
+is taken off her flashes it. In the port: `gauge::FLASH`, played from
+`Numbers::step`'s answer in `battle/hud.rs`. Looked for in the walkthrough on
+2026-10-09: in the first battle (660 to 665 s, every other frame) the number
+never goes amber while she shoots the Eaters, which is what the mark says; a
+hit on her was not found in that stretch, so the flash itself is still to be
+seen there.
 
 **When the field draws all this** (0x10F0F8). The field is free (0x10E554) unless
 one of its flags 0, 0x12 (a battle), 0x1B, 0x1E, 0x2C, 0x34, 0x39, 0x3D, 0x42 is
@@ -1679,8 +1695,7 @@ failed"), and so is the place's name (see "The sign that names a place"). The
 display, the place's name and the gauge are left out under either window and
 while the field is being left. The sign of sets 6 to 14 is the sign of what a
 button would do, and the marks over characters are in "The marks over
-characters". Not ported: the flash when she is hit, and the states and flags
-the field is not free in.
+characters". Not ported: the states and flags the field is not free in.
 
 ## The windows a script puts up
 

@@ -870,9 +870,7 @@ fn draw(
     };
     // The numbers that are up go on, and those asked for are put up where the
     // camera has their places now (0x3D8CC).
-    if let Some(numbers) = &mut numbers {
-        numbers.step(&hud.signs, frames, |at| aim.view.project(at, aspect));
-    }
+    let struck = numbers.as_mut().is_some_and(|numbers| numbers.step(&hud.signs, frames, |at| aim.view.project(at, aspect)));
     let shown = &mut *shown;
     // The sight of a snipe follows what the scope has it do, and is done with
     // once its going has played out (0x42150).
@@ -880,6 +878,10 @@ fn draw(
         Some(now) if Sight::follow(&mut shown.sight, &hud.sight, now, frames) => (scope.sight, shown.sight) = (None, None),
         Some(_) => {}
         None => shown.sight = None,
+    }
+    // What a hit takes off her has her gauge flash (0x3DB94).
+    if struck {
+        shown.gauge.play(&hud.gauge.layout, crate::field::hud::gauge::FLASH);
     }
     shown.gauge.advance(&hud.gauge.layout, frames);
     shown.heat.advance(&hud.status, frames);

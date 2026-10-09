@@ -17,6 +17,12 @@ use crate::interface::layer;
 
 /// The set the gauge plays (0x3DAAC).
 const SET: usize = 0;
+/// The set played over it as what a hit takes off her is put up in a battle
+/// (0x3DB94, from 0x35848): sixteen frames in which the glow comes and goes and "HP" and the
+/// number go amber and back. It has one track for each of those three groups,
+/// and so takes over the first of each group's two, the ones drawn while she is
+/// well; in danger nothing of it is seen.
+pub const FLASH: usize = 1;
 
 // The groups that are more than something to draw (0x40828): two tracks each for
 // the glow, the "HP" and the number, and the bar, which is cut to her share.
@@ -208,6 +214,37 @@ mod tests {
         let whole = drawn(&gauge, 0.0, 372, 372);
         assert_eq!(whole.len(), (4 + 1 + 1 + 1 + 3) * 6);
         assert_eq!(extent(bar(&whole, 372, false)).width(), 152.0);
+    }
+
+    /// Set 1 played over the gauge (0x3DB94): its clips are at their most two
+    /// frames in (the glow at 150, the figures amber and all there) and back
+    /// where they began at sixteen.
+    #[test]
+    fn a_hits_number_has_the_gauge_flash_for_sixteen_frames_while_she_is_well() {
+        let Some(gauge) = game() else {
+            eprintln!("skipped: game data not unpacked");
+            return;
+        };
+        let draw = |player: &Player, hp: i32| {
+            let mut canvas = Canvas::default();
+            gauge.draw(&mut canvas, player, hp, 372, ON_THE_FIELD);
+            canvas.vertices().to_vec()
+        };
+        let mut player = gauge.player(0.0);
+        let before = draw(&player, 357);
+        player.play(&gauge.layout, FLASH);
+        player.advance(&gauge.layout, 2.0);
+        let lit = draw(&player, 357);
+        assert_eq!(lit.len(), before.len() + 6, "the glow is there");
+        assert!(lit[lit.len() - 6..].iter().all(|vertex| vertex.colour == [255, 229, 124, 255]), "{:?}", lit[lit.len() - 1].colour);
+        player.advance(&gauge.layout, 14.0);
+        assert_eq!(draw(&player, 357), before);
+        // In danger the other track of each pair is drawn, and nothing of the
+        // flash is seen.
+        let mut in_danger = gauge.player(0.0);
+        in_danger.play(&gauge.layout, FLASH);
+        in_danger.advance(&gauge.layout, 2.0);
+        assert_eq!(draw(&in_danger, 50), drawn(&gauge, 2.0, 50, 372));
     }
 
     #[test]

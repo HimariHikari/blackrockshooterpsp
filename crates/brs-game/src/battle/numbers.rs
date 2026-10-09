@@ -113,14 +113,20 @@ impl Numbers {
     /// Has those that are up go on by so many frames of the layout, and takes away
     /// those that have played out; then puts up those asked for, each where
     /// `place` has its place on the screen. One whose place is not before the
-    /// camera is not put up.
-    pub fn step(&mut self, layout: &Layout, frames: f32, place: impl Fn(Vec3) -> Option<Vec2>) {
+    /// camera is not put up. Says whether what a hit took off her was among
+    /// those asked for, which has her HP gauge flash (0x35830 to 0x35848: a
+    /// number over nought, wherever it is, of one whose numbers are not marked;
+    /// every enemy's are, as they are made, 0x91E10, and hers are not, 0x99B7C).
+    pub fn step(&mut self, layout: &Layout, frames: f32, place: impl Fn(Vec3) -> Option<Vec2>) -> bool {
         self.up.retain_mut(|number| !number.player.advance(layout, frames));
+        let mut struck = false;
         for Asked { kind, value, at, hers } in self.asked.drain(..) {
+            struck |= hers && kind == Kind::Damage && value > 0;
             if let Some(at) = place(at) {
                 self.up.push(Number { kind, value, at, hers, player: layout.player(kind.set()) });
             }
         }
+        struck
     }
 
     /// Draws them (0x3EE60): each about its place, in whole pixels (0x3EFA8), as

@@ -42,11 +42,15 @@ Last brought up to date: 9 October 2026.
 - [x] A timed mission tried in play to its time-out: the clock counts down and
       the map's script takes over when it ends (mission 28)
 
+### Battles' finer rules
+- [x] Her HP gauge flashes for sixteen frames when a hit takes HP off her
+      (0x3DB94; not for hits on enemies, which the walkthrough bears out)
+
 ### Setting up and sharing
 - [x] On GitHub, code only: none of the game's data is in the repository
 - [x] `brs-setup`: drop the .iso on it, choose a folder, and the game is made
       there, sound included (tried whole: 3 minutes, 1.4 GB)
-- [x] GitHub builds the Windows bundle itself (first build passed)
+- [x] GitHub builds the Windows bundle itself, and release `v0.1.0` has it
 
 ## Still to do
 
@@ -56,7 +60,6 @@ Last brought up to date: 9 October 2026.
 - [ ] The "mazuma" missions' counter (the system script's own; not looked at in play)
 
 ### Remarks in the notes still marked "not ported", to be sorted one by one
-- [ ] The flash when she is hit on the field
 - [ ] The states and flags the field is not free in
 - [ ] A picture kept and drawn moved about (picture kind 0x800)
 - [ ] Names of items from 500 on in a text; text code 0x1A
@@ -75,6 +78,7 @@ Last brought up to date: 9 October 2026.
 - [ ] What the field's flag 0x50 does to the camera (misread once; to be read again)
 
 ### To be compared with the walkthrough
+- [ ] The gauge's flash at a hit on her (a moment she is hit has to be found)
 - [ ] The flame at her eye on the stage select
 - [ ] The timing of the bosses' moves
 - [ ] The guard's display ("Bike endurance" and its gauge): not found in the
