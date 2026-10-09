@@ -2988,8 +2988,11 @@ pub mod value {
     pub const OBJECTIVE: i32 = 49;
     /// The choice made in the window of a mission failed.
     pub const FAILED_CHOICE: i32 = 50;
-    /// How the field is left when what she guards is lost.
-    pub const LOSS_EXIT: i32 = 52;
+    /// The number of the character she guards (the field's + 0xE68, which is
+    /// -1 from when the field is made, 0x1181F0; 0x1179F4 gives the character).
+    /// When what it has left is gone the system script has the field left with
+    /// this number, and so this character's callback started (`update_weakness`).
+    pub const GUARDED: i32 = 52;
     /// The enemies about what she guards.
     pub const ENEMIES_NEAR: i32 = 53;
     pub const GUARD_TIMER: i32 = 55;

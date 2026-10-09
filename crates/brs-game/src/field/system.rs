@@ -476,14 +476,37 @@ pub fn read_value(scene: &Scene, progress: &Progress, tables: &FieldTables, numb
         45 => tunable(PRM_OWN_PACE) as i16 as i32,
         46 => tunable(PRM_ALERT_FRAMES) as i32,
         48 => tunable(PRM_DASH_PACE) as i16 as i32,
-        // The enemies about what she guards (0x10D370): nothing to guard is kept
-        // yet, and with nothing to guard the original counts none either.
-        value::ENEMIES_NEAR => 0,
+        // The enemies about what she guards (0x10D370): of the map's own (500 to
+        // 599) and of those that popped up (3000 to 3099), the ones that are not
+        // hidden and no further than 300 from the character a script has named
+        // (value 52); none where there is no such character.
+        value::ENEMIES_NEAR => {
+            let guarded = guarded(scene);
+            scene.characters.get(&guarded).map_or(0, |kept| {
+                let about = |id: i32, character: &Character| {
+                    id != guarded && GUARD_FOES.iter().any(|numbers| numbers.contains(&id)) && !character.hidden() && character.position.distance(kept.position) <= GUARD_REACH
+                };
+                scene.characters.iter().filter(|(&id, character)| about(id, character)).count() as i32
+            })
+        }
+        value::GUARDED => guarded(scene),
         value::NEXT_MAP | value::NEXT_ENTRANCE | value::OBJECTIVE => kept(number) as i16 as i32,
         value::FAILED_CHOICE => kept(number) as u8 as i32,
-        value::ASYNC_TIME | 39 | value::LOSS_EXIT | value::GUARD_TIMER | value::EXIT => kept(number),
+        value::ASYNC_TIME | 39 | value::GUARD_TIMER | value::EXIT => kept(number),
         _ => 0,
     }
+}
+
+/// How near what she guards an enemy counts against it (0x10D3CC), and the
+/// numbers of the characters that are enemies for that: the map's own and those
+/// that pop up (0x10D418 to 0x10D43C).
+const GUARD_REACH: f32 = 300.0;
+const GUARD_FOES: [std::ops::Range<i32>; 2] = [500..600, 3000..3100];
+
+/// The number of the character she guards: none until a script names one
+/// (0x1181F0).
+fn guarded(scene: &Scene) -> i32 {
+    scene.values.get(&value::GUARDED).copied().unwrap_or(-1)
 }
 
 /// Sets one of the field's figures (0xD4108, 0x1E78, 0x117CD8). Returns whether the
@@ -502,7 +525,7 @@ pub fn write_value(scene: &mut Scene, progress: &mut Progress, number: i32, to: 
         59 => scene.set_flag(0x59, to != 0),
         value::MISSION_SECONDS => progress.set_variable(variable::MISSION_TIME, to.wrapping_mul(1000)),
         value::POP_SECONDS => progress.set_variable(variable::POP_INTERVAL, to.wrapping_mul(0xf000)),
-        value::NEXT_MAP | value::NEXT_ENTRANCE | value::FAILED_CHOICE | 60 | value::ASYNC_TIME | 39 | value::LOSS_EXIT | value::GUARD_TIMER | value::EXIT => {
+        value::NEXT_MAP | value::NEXT_ENTRANCE | value::FAILED_CHOICE | 60 | value::ASYNC_TIME | 39 | value::GUARDED | value::GUARD_TIMER | value::EXIT => {
             scene.values.insert(number, to);
         }
         value::OBJECTIVE => {
@@ -1589,6 +1612,49 @@ mod tests {
         }
         assert_eq!(game.scene.player().unwrap().blend_frames(), 8);
         assert_eq!(game.scene.player().unwrap().motion, Some((Motion::Own(1), true)));
+    }
+
+    /// `update_weakness` of the system script, with the count the engine gives it
+    /// (0x10D370): each second what she guards loses ten (the tunables' + 0x4C)
+    /// for each enemy about it, and when it has nothing left the field is to be
+    /// left with the guarded character's own number.
+    #[test]
+    fn what_she_guards_loses_as_enemies_stand_about_it_and_its_loss_has_the_field_left() {
+        let Some(mut game) = game() else {
+            eprintln!("skipped: game data not unpacked");
+            return;
+        };
+        let defaults = crate::field::scene::test_defaults();
+        for (id, x) in [(600, 0.0), (500, 100.0), (501, 400.0), (3000, 299.0), (550, 50.0), (700, 10.0), (3100, 10.0)] {
+            game.scene.characters.insert(id, Character::new(1, Vec3::new(x, 0.0, 0.0), 0.0, &defaults));
+        }
+        game.scene.characters.get_mut(&550).unwrap().flags.set(flag::HIDDEN, true);
+        let about = |game: &Game| read_value(&game.scene, &game.progress, &game.tables, value::ENEMIES_NEAR);
+        // Nobody is guarded until a script names someone.
+        assert_eq!((read_value(&game.scene, &game.progress, &game.tables, value::GUARDED), about(&game)), (-1, 0));
+        write_value(&mut game.scene, &mut game.progress, value::GUARDED, 600);
+        // Of the map's enemies and those that popped up, the two that are not
+        // hidden and within 300: not the one 400 away, the hidden one, nor those
+        // whose numbers are no enemy's.
+        assert_eq!(about(&game), 2);
+        const LEFT: i32 = 10_011;
+        game.progress.set_variable(LEFT, 25);
+        let frame = Frame { own_time: 0x800, time: 0x800, moved: 0.0 };
+        let mut seconds = |game: &mut Game, frames: usize| {
+            for _ in 0..frames {
+                game.with(|system, world| system.frame(frame, world));
+            }
+        };
+        // A second is over once more than 0xF000 has gone by: thirty-one frames.
+        seconds(&mut game, 30);
+        assert_eq!(game.progress.variable(LEFT), 25);
+        seconds(&mut game, 1);
+        assert_eq!(game.progress.variable(LEFT), 5);
+        assert!(!game.scene.flag(field_flag::LEAVE));
+        seconds(&mut game, 31);
+        assert_eq!(game.progress.variable(LEFT), 0);
+        assert!(game.scene.flag(field_flag::LEAVE));
+        assert_eq!(read_value(&game.scene, &game.progress, &game.tables, value::EXIT), 600);
     }
 
     #[test]

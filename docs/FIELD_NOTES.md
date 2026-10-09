@@ -1398,12 +1398,33 @@ What the functions do:
   player's int parameter 8; then the timer and the distance start again.
 - `update_pop_enemy`: one that popped up and is more than 3000 from her is hidden;
   the pop timer runs down while value 40 and flag 6178 are on.
-- `update_weakness`: while variable 10011 is above zero, every second it loses
-  `prm[+0x4C]` (10) for each enemy within 300 of what she is guarding (0x10D370);
-  at zero the field is to be left (values 57 and 56).
+- `update_weakness`: while variable 10011 is above zero, every second (value
+  55 counts the frame's time up past 0xF000) it loses `prm[+0x4C]` (10) for
+  each enemy within 300 of what she is guarding (value 53, 0x10D370), and the
+  first number of the display's first panel is given what is left; at zero
+  the field is to be left: value 57 is given value 52, the guarded character's
+  own number, and value 56 is set, so that character's callback is started.
 - `update_mis_time(time)`: while variable 10012 (thousandths of a second) is above
-  zero it runs down by the time; at zero the field is to be left. In a "mazuma"
-  mission a count goes up every 180 frames.
+  zero it runs down by the time, and the first number of the second panel is
+  given it; at zero the field is to be left with nought for value 57, her own
+  number, so the callback is hers. In a "mazuma" mission a count goes up every
+  180 frames.
+
+Tried in play on 2026-10-09 (`docs/compare/guard_mission_port.png`,
+`timed_mission_port.png`). Guarding: `--map STG02_09 --variables
+10004:22,220:108 --skip-battles --skip-messages --script wait:5,seek:5,wait:70`:
+with the first enemy beaten the map's script has four more come for the bike
+(character 600: `s52(n, 126, 600)`, `s96(52, 600)`, `s24(10011, 500)`), the
+display reads "Defeat all the enemies n/4" and "Bike endurance:" with its gauge,
+the gauge runs down while they stand by the bike, and after eighteen seconds
+the callback of 600 is started and MISSION FAILED comes. A time: `--mission 28
+--skip-battles --skip-messages --script wait:80` (the map's script gives it
+sixty seconds at its start): the clock counts down on the display, and as it
+ends her own callback is started, in which that map's script brings the next
+enemy on and gives another sixty. Neither has been found in the walkthrough
+yet: mission 28 is none of the story's, and of mission 22 (6740 to 7869 s) what
+was seen between 7300 and 7780 s were the grenades ("n/4", 7240 to 7605) and a
+wave of three (7692 to 7734), with advertisements on almost every jump.
 - `enter_stage_select`: makes her whole; if the mission was cleared (220 = 200) its
   state becomes 255, and every mission whose required missions (eight bytes at
   record + 0x1C) are all cleared and whose required flag (record + 0x28) is set
@@ -1459,8 +1480,8 @@ its own, in the second table below).
 | 45, 46, 48 | `prm[+0x44]`, `prm[+0x4A]`, `prm[+0x46]` (read only) |
 | 49 | which of the mission's lines says what is to be done (field + 0x1D40); setting it runs `mission_update_info` |
 | 50 | the answer given in the window of a mission failed (field + 0x1D42); 51 reads field flag 0x3D |
-| 52 | how the field is left when what she guards is lost (field + 0xE68) |
-| 53 | the enemies about what she guards (read only) |
+| 52 | the number of the character she guards (field + 0xE68; -1 from when the field is made, 0x1181F0; 0x1179F4 gives the character) |
+| 53 | the enemies about what she guards (read only, 0x10D370): the characters numbered 500 to 599 and 3000 to 3099 that are not hidden and no further than 300 from it; none where nobody is guarded |
 | 54, 59 | set field flags 0x1A and 0x59 |
 | 55 | the guard's one-second timer (field + 0x53A4) |
 | 56, 57 | field flag 0x58, the field is to be left, and how (field + 0xE6C) |
@@ -1525,18 +1546,16 @@ a minute.
 
 In the port: the script runs with the field's tables mapped into its address space,
 so it reads `prm` and the missions' records itself. Stand-ins and gaps: nothing
-is guarded yet (value 53 reads 0: the character guarded is the field's + 0xE68,
-by 0x1179F4, and 0x10D370 counts the enemies about it); the save's
+the save's
 backup and the skills' functions do nothing (what the backup is for is under "A
-mission failed"). When value 56 is set (the field's flag 0x58: a mission's
+mission failed"). Who is guarded and the enemies about it are
+`value::GUARDED` and `value::ENEMIES_NEAR` in `field/system.rs`. When value 56 is set (the field's flag 0x58: a mission's
 time has run out, or what she guards is lost) the field's frame starts the map
 script's callback for a character with the number in value 57, and clears the
 flag (0x10D6BC to 0x10D6E8: 0x117E14 with 0x39, then 0xE84A0); so "how the
 field is left" is a number the map's own script answers to, as it is for value
 52 (`s96(52, 600)` on `STG02_09`). In the port: `notice_touches` in
-`field/mod.rs`, before whatever she has walked into; not yet tried on a
-mission with a time (`s96(58, 60)` on `STG02_08`, `s96(58, 300)` on
-`STG04_0A`). A script of "kind 2"
+`field/mod.rs`, before whatever she has walked into. A script of "kind 2"
 is the loaded event's, of which the system script only asks a function that
 none has (see function 0x33 above).
 

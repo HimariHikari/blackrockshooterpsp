@@ -1768,7 +1768,7 @@ impl bscr::Host for Engine<'_, '_> {
                     VALUE_ALL_NEAR => self.field.scene.set_flag(field_flag::ALL_NEAR, a(1) == 0),
                     // Nothing here, where every character is placed anew each frame.
                     VALUE_PLACED_AT_ONCE => {}
-                    value::POPS | value::NEXT_MAP | value::NEXT_ENTRANCE | value::OBJECTIVE | value::LOSS_EXIT | 54 | value::MISSION_SECONDS | 59 | 60 => {
+                    value::POPS | value::NEXT_MAP | value::NEXT_ENTRANCE | value::OBJECTIVE | value::GUARDED | 54 | value::MISSION_SECONDS | 59 | 60 => {
                         if system::write_value(self.field.scene, self.field.progress, a(0), a(1)) {
                             self.field.scene.display_stale = true;
                         }
