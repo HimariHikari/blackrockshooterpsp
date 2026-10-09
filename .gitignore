@@ -1,0 +1,17 @@
+/target/
+# Original game data stays local and is never committed: the disc image, what is
+# extracted and unpacked from it, and pictures that show the game's art.
+/game/
+*.rar
+*.iso
+*.cso
+/docs/compare/
+/reference_screenshots/
+# Saves and options of the port's own.
+/save/
+# Scratch output of the reverse-engineering tools (listings of the executable,
+# decoded scripts, test pictures).
+/tools_re/out/
+__pycache__/
+# An earlier experiment, not part of the port.
+/old_godot/

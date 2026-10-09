@@ -1,0 +1,13 @@
+[package]
+name = "brs-engine"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+bevy = "0.19"
+brs-formats = { path = "../brs-formats" }
+# The decoder Bevy's own audio uses for Ogg Vorbis: here to turn a file into samples.
+lewton = "0.10"
+# Cisco's H.264 decoder, built from its source: for the picture of the game's films.
+openh264 = "0.9"

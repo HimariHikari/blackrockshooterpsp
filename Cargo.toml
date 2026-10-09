@@ -1,0 +1,19 @@
+[workspace]
+resolver = "2"
+members = ["crates/brs-formats", "crates/brs-extract", "crates/brs-engine", "crates/brs-viewer", "crates/brs-game"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+anyhow = "1"
+flate2 = "1"
+png = "0.17"
+
+[profile.dev]
+opt-level = 1
+# No debug info: with it the build folder grew to 9 GB, over a third of it debugger
+# symbol files. Panics still report their message and location; what is lost is
+# stepping in a debugger and line numbers in backtraces.
+debug = false

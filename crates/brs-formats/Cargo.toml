@@ -1,0 +1,8 @@
+[package]
+name = "brs-formats"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+flate2.workspace = true

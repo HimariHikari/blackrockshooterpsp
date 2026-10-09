@@ -1,0 +1,10 @@
+[package]
+name = "brs-viewer"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+bevy = { version = "0.19", features = ["free_camera"] }
+brs-engine = { path = "../brs-engine" }
+brs-formats = { path = "../brs-formats" }

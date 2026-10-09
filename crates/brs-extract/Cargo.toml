@@ -1,0 +1,9 @@
+[package]
+name = "brs-extract"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+brs-formats = { path = "../brs-formats" }
+png.workspace = true
