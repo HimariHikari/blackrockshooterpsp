@@ -1874,12 +1874,12 @@ called (its frame + 0x10 + 4n) or a global (context + 0x104 + 4n).
 | 0x0A | new line |
 | 0x0C | the page ends here: cross goes on to the rest |
 | 0x13 nn | the colour: 0 the one text starts in |
-| 0x14 nnnn (long) | the name of item n, in colour 1; from 500 on a name of another table (0x12CC4C), not ported |
+| 0x14 nnnn (long) | the name of item n, in colour 1; from 500 on a name of another table (0x12CC4C), not ported: no text of the data has the code (they have only `\b`, `\c`, `\z` and `\f` written in them; `tools_re/out/_text_codes.py`), a script puts it in with a number of its own, and no box of any map gives a thing numbered so; the port warns if one is ever asked |
 | 0x15 nn | a button's icon |
 | 0x16 nnnn (long) | read and dropped |
 | 0x17 nn | a dash n pieces long (U+2015 each) |
 | 0x19 nn | a text the game no longer has (0x12CF74 answers none) |
-| 0x1A nn | one of the work area's texts (0x12FBE8: 97 bytes each), not ported |
+| 0x1A nn | one of the work area's texts (0x12FBE8: 97 bytes each); only the records' script gives such words, and the port has those by another way (`records.rs`: a reward's own words) |
 | 0x1D nnnn (long) | the number, in tens |
 
 The same in writing: a backslash, a letter and a number in brackets (table
@@ -1944,12 +1944,18 @@ to), and `field/hud/window.rs` draws the window from the layout. Everything is
 drawn on the canvas in layers that are the tasks' own numbers (`interface::layer`):
 the fade of the scene alone (`scene::SceneFade`), the display and the gauge, the
 pictures, the windows, the screen's fade (`scene::Fade`, which a picture of kind 0
-or 1 restarts) and the captions. Still to do: the variant that opens with sound 7
-(0x6BE90: a window made by 0xCFB9C whose + 0x20 is nought, and the menu's
-0x5463C) and sound 5 for choice 1 of a window with flags 0x80 and 0x100 when
-0x6BCA8 answers 1; the half fades and the wipe of the screen's fade; and the port's
-windows still have their frame before the script's, where the original's tasks
-have theirs after it. `--skip-messages`, and holding start, take every window as
+or 1 restarts) and the captions. Of what was once left here: the variant that
+opens with sound 7 (0x6BE90: a window made by 0xCFB9C whose + 0x20 is nought,
+and the menu's 0x5463C) and sound 5 for choice 1 of a window with flags 0x80
+and 0x100 are of no window a map's script makes (`field/window.rs` says where
+they are); the fade's half kinds (4 and 8) are started only by the tasks that
+save, load and delete (0x5330, 0x5804, 0x5F28: the game's picture goes to
+half behind the PSP's own dialog, where the port has its list's own sheet) and
+by 0x6EF70, and its rows (0x100, 0x200) only by the title, which has them. Still
+to do: the port's windows have their frame before the script's, where the
+original's tasks have theirs after it (a frame's difference at the most), and
+the fade's kind 0x800, which nothing starts by a plain number.
+`--skip-messages`, and holding start, take every window as
 read and a question as answered with what its cursor starts on.
 
 ## Events, and the messages people send her

@@ -613,7 +613,7 @@ impl text::Lookup for Names<'_> {
 
     fn item(&self, number: i32) -> String {
         if number >= FIRST_OTHER_NAME {
-            debug!("a text asked for name {number}, of a kind that is not ported");
+            warn!("a text asked for name {number}, of the names from 500 on, which are not ported");
             return String::new();
         }
         self.items.name(number).to_owned()

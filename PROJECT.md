@@ -66,9 +66,15 @@ Last brought up to date: 9 October 2026.
 ### Remarks in the notes still marked "not ported", to be sorted one by one
 - [ ] The states and flags the field is not free in
 - [ ] A picture kept and drawn moved about (picture kind 0x800)
-- [ ] Names of items from 500 on in a text; text code 0x1A
-- [ ] The window that opens with sound 7, and choice sound 5
-- [ ] The half fades and the wipe of the screen's fade
+- [x] Names of items from 500 on in a text; text code 0x1A: no text in the
+      data uses either, the records' rewards have their words by another way,
+      and the port warns if a script ever asks for such a name
+- [x] The window that opens with sound 7, and choice sound 5: of no window a
+      map's script makes
+- [x] The half fades and the wipe of the screen's fade: the save tasks' and the
+      title's alone; the title has its own, the save list its own sheet
+- [ ] The port's windows have their frame before the script's, the original's
+      after it (a frame's difference at the most)
 - [ ] The field's flag 0x55 and the jingle's stream at a mission cleared
 - [ ] A light's kind, place and angles kept from the map before
 - [ ] The order of drawing of characters (setting 123)
