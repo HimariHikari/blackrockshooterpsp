@@ -1155,7 +1155,12 @@ count at the camera's + 0xC80 goes up to 30 a frame at a time with the flag set
 and down to nought without it, and by its share of 30 the view is turned from
 her towards a point 100 over what she guards. Nothing in the executable sets
 the flag by its number (no call of 0x1176FC with 0x50) and the system script
-has no 80 in it, so what sets it is not found.
+has no 80 in it, so what sets it is not found. (Read again on 2026-10-09:
+0x1179D8 gives the character the field's + 0xE64 names, and that is nought
+from when the field is made, 0x1181EC: her own number. What she guards is the
+field's + 0xE68, which 0x1179F4 gives, and only 0x10D370 asks. So "what she
+guards" in this paragraph is she herself, and what the view is turned from was
+misread: it is to be read again before anything is made of it.)
 
 **The view the stick goes by** (the camera's + 0x50; 0x101700 takes the stick's
 way through its inverse, and 0x1017C0 lays that on the ground she is on). The
@@ -1520,7 +1525,8 @@ a minute.
 
 In the port: the script runs with the field's tables mapped into its address space,
 so it reads `prm` and the missions' records itself. Stand-ins and gaps: nothing
-is guarded yet (value 53 reads 0); the save's
+is guarded yet (value 53 reads 0: the character guarded is the field's + 0xE68,
+by 0x1179F4, and 0x10D370 counts the enemies about it); the save's
 backup and the skills' functions do nothing (what the backup is for is under "A
 mission failed"); the field is not
 left when value 56 is set (a mission's time running out). A script of "kind 2"
