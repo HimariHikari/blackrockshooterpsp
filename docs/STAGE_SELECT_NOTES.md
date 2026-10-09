@@ -4,8 +4,7 @@ What the executable has for the screen between missions, as far as it has been
 read. Addresses are of `EBOOT.OLD`. The port has it in `crates/brs-game/src/hub/`
 (see "In the port" at the end): the root, what is chosen from, the messages, the
 interface with its script, the lists, the texts, the world, and her model in
-its scene. Saving and loading are in `SAVE_NOTES.md`. The scene's effect (the
-archive's file 37, 0x647FC to 0x64A7C) is not ported; the title is
+its scene with its effect. Saving and loading are in `SAVE_NOTES.md`; the title is
 `docs/TITLE_NOTES.md`.
 
 ## What it is
@@ -543,6 +542,27 @@ and two numbers: where the stage is on the world's map, in its pixels.
 
 What is drawn for group 47 is not of the layout: her model, seen by a camera
 of the screen's own, and an effect.
+
+**The effect (the object at + 0x5470; 0x647FC to 0x64A7C).** It has the
+engine's object for an effect that plays (+ 4, made by 0x2C580), the scene's
+camera (+ 8) and her model (+ 0xC), which of its files it plays (+ 0x10, which
+0x64A00 keeps at nought whatever the script gives; the files from + 0x18, of
+which there is the one, the archive's file 37), a node of her model (+ 0x14,
+`n02(1, n)`) and three floats (+ 0x20, `n03(6 to 8, x)`). `n01(1)` starts it
+(0x64984 with nought: 0x2C5E0 with the file, and its flag 1 is set). Each frame
+while that flag is set (0x6485C) it is given the scene's camera (0x2C794), put
+where that node of her model is (0x66620) by the matrix of the three floats as
+a way from it (0x16205C, 0x2C79C), and has a frame (0x2C694); when it has played
+out (0x2C824) the flag is cleared. It is drawn with the scene (0x6491C).
+
+The script starts it once, in `close()`, as a mission has been chosen and the
+screen goes: her second animation and the camera's are started, 110 frames
+are waited, and then `n02(0, 0)`, `n02(1, 60)`, `n03(6 to 8, 0)`, `n01(1)` and
+a sound: node 60 of her model is her left eye, and the effect is the blue
+flame there as the camera has come up to her face. In the port:
+`interface::SceneEffect` and `show_effect` in `hub/scene.rs`
+(`docs/compare/stage_select_effect_port.png`); not yet looked at beside the
+walkthrough.
 
 **The camera (the object at + 0x5270).** Its rig is a camera file (`041.insm`:
 one node and a lens, as the cuts of story scenes have theirs) and it has two

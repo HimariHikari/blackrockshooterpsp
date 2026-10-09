@@ -33,6 +33,28 @@ use crate::writing::{Align, Fonts, Placing, Style};
 
 /// The archive the screen is of (0x1676BC).
 pub const PACK: &str = "IF/MENU/IF_STAGE_SELECT.GZ";
+/// The scene's effect among its files (0x64964 gives it to the effect's object).
+const EFFECT: usize = 37;
+
+/// The file of the scene's effect.
+pub fn effect_file() -> String {
+    interface::file(PACK, EFFECT, "efc")
+}
+
+/// The scene's effect as the script has it (the object at the screen's + 0x5470,
+/// 0x647FC to 0x64A7C): played on a node of her model, some way from it, from
+/// when the script starts it until it has played out.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct SceneEffect {
+    /// How many times the script has started it (`n01(1)`, 0x64984 with nought).
+    pub begun: u32,
+    /// The node of her model it is on (`n02(1, n)`, its + 0x14; 0x66620 gives
+    /// the frame where that node is).
+    pub node: i32,
+    /// How far from the node it is, in the node's own frame (`n03(6 to 8, x)`,
+    /// its + 0x20 on, made a matrix the node's is multiplied by, 0x648C4).
+    pub offset: Vec3,
+}
 // Its files (0x61BA0 on): the layout, the stages' texts, the strip's, the
 // messages' and the script.
 const LAYOUT: usize = 30;
@@ -627,6 +649,7 @@ impl Motion {
 /// drawn at all.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Scene {
+    pub effect: SceneEffect,
     pub her: Motion,
     pub camera: Motion,
     pub late: bool,
@@ -655,6 +678,7 @@ pub struct Interface {
     ready: bool,
     /// A picture is to be kept after this place is drawn (its flag 2, + 0x84).
     picture_after: Option<usize>,
+    effect: SceneEffect,
     kept: Option<Kept>,
     /// A stage is newly there (its flag 4).
     new_stage: bool,
@@ -717,6 +741,7 @@ impl Interface {
             modes: [0; 3],
             ready: false,
             picture_after: None,
+            effect: SceneEffect::default(),
             kept: None,
             new_stage: false,
             stages,
@@ -949,7 +974,7 @@ impl Interface {
     /// What the scene shows.
     pub fn scene(&self) -> Scene {
         let drawn = matches!(self.modes[1], 1 | 2) && self.places[1].track_of(group::SCENE).is_some();
-        Scene { her: self.her, camera: self.camera, late: self.late, drawn }
+        Scene { effect: self.effect, her: self.her, camera: self.camera, late: self.late, drawn }
     }
 
     /// A frame of it (0x6246C).
@@ -1066,12 +1091,12 @@ impl script::Host for Host<'_> {
         let layout = &self.assets.layout;
         Ok(match number {
             // The scene's camera and her model start the animation that was
-            // chosen for them; the effect, which is not ported; that it is
-            // ready, or is not; and a picture to be kept after a place is
-            // drawn.
+            // chosen for them, and the effect starts; that it is ready, or is
+            // not; and a picture to be kept after a place is drawn.
             1 => {
                 match call.int(0)? {
                     0 => interface.camera.start(),
+                    1 => interface.effect.begun += 1,
                     2 => interface.her.start(),
                     3 => interface.ready = true,
                     4 => interface.ready = false,
@@ -1083,6 +1108,10 @@ impl script::Host for Host<'_> {
             2 => {
                 let (which, value) = (call.int(0)?, call.int(1)?);
                 match which {
+                    // Which of the effect's files it plays is nought whatever
+                    // is given (0x64A00): there is the one.
+                    0 => {}
+                    1 => interface.effect.node = value,
                     2 => interface.her.chosen = usize::try_from(value).unwrap_or(0),
                     3 => interface.her.looped = value != 0,
                     6 => interface.camera.chosen = usize::try_from(value).unwrap_or(0),
@@ -1103,8 +1132,10 @@ impl script::Host for Host<'_> {
                 0
             }
             3 => {
-                if call.int(0)? == 9 {
-                    interface.strip.speed = -call.float(1)?.abs();
+                match call.int(0)? {
+                    which @ 6..=8 => interface.effect.offset[(which - 6) as usize] = call.float(1)?,
+                    9 => interface.strip.speed = -call.float(1)?.abs(),
+                    _ => {}
                 }
                 0
             }

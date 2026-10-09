@@ -3,20 +3,25 @@
 //! (0x66098 to 0x66C88), in the suit and with the weapon she has on, stands
 //! in it and is seen by a camera of the screen's own (0x643AC to 0x647E8); each
 //! is in one of two animations of the screen's archive, as its script has them
-//! played (`interface.rs` keeps how far each is). See
+//! played (`interface.rs` keeps how far each is). The scene's effect (0x647FC
+//! to 0x64A7C) plays on a node of her model when the script starts it. See
 //! `docs/STAGE_SELECT_NOTES.md`.
 //!
 //! The camera draws to the scenes' picture, as the menus' does: the field's
 //! cameras are put out for as long as it does, and the picture is put among
 //! what the screen draws where the group has its place.
 
+use std::sync::Arc;
+
 use bevy::prelude::*;
 use brs_engine::animation::Animator;
 use brs_engine::canvas::{Canvas, Seen, HEIGHT, WIDTH};
-use brs_engine::model::ModelAsset;
+use brs_engine::effect::Camera as EffectView;
+use brs_engine::effects::{EffectCamera, EffectFile, Playing};
+use brs_engine::model::{ModelAsset, Skeleton};
 use brs_engine::AssetStores;
 
-use super::{Hub, HubAssets, FRAMES_A_STEP};
+use super::{interface, Hub, HubAssets, FRAMES_A_STEP};
 use crate::battle::actor::WEAPON_NODE;
 use crate::battle::tables::PlayerStats;
 use crate::data::GameData;
@@ -157,6 +162,73 @@ fn show(
     }
 }
 
+/// On the scene's effect while it plays: which of the script's starts it is of.
+#[derive(Component)]
+struct OfScene {
+    begun: u32,
+}
+
+/// The file of the scene's effect, once it has been asked for.
+#[derive(Resource, Default)]
+struct SceneEffectFile(Option<Option<Arc<EffectFile>>>);
+
+/// The scene's effect (its frame 0x6485C, its start 0x64984): started by the
+/// script, it is where the node of her model is that the script names, as far
+/// from it as the script says, seen by the scene's camera, a frame of it for each
+/// of the screen's; and it is gone when it has played out, until it is started
+/// again.
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+fn show_effect(
+    mut commands: Commands,
+    state: Res<FieldState>,
+    menu: Res<Menu>,
+    data: Res<GameData>,
+    time: Res<Time>,
+    mut stores: AssetStores,
+    mut file: ResMut<SceneEffectFile>,
+    mut seen: ResMut<EffectCamera>,
+    her: Query<(&Transform, &Skeleton, &Animator), With<Her>>,
+    camera: Query<&Transform, With<SceneCamera>>,
+    mut playing: Query<(Entity, &OfScene, &mut Playing)>,
+    mut played: Local<u32>,
+) {
+    let scene = state.hub().filter(|_| !menu.made()).and_then(Hub::scene);
+    let (Some(scene), Ok((root, skeleton, animator)), Ok(camera)) = (scene, her.single(), camera.single()) else {
+        for (entity, ..) in &playing {
+            commands.entity(entity).despawn();
+        }
+        *played = 0;
+        return;
+    };
+    seen.0 = EffectView::of(camera.to_matrix());
+    let asked = scene.effect;
+    let node = u8::try_from(asked.node).ok().and_then(|node| skeleton.index_of(node)).map(|index| animator.model_space(skeleton, index).to_matrix());
+    let at = root.to_matrix() * node.unwrap_or(Mat4::IDENTITY) * Mat4::from_translation(asked.offset);
+    for (entity, made, mut playing) in &mut playing {
+        if made.begun != asked.begun || !playing.playing() {
+            commands.entity(entity).despawn();
+            continue;
+        }
+        playing.place(at);
+        playing.unseen = !scene.drawn;
+        // A frame of it for each of the screen's, thirty to the second (0x2C694).
+        playing.give(time.delta_secs() * 60.0);
+    }
+    if asked.begun == *played {
+        return;
+    }
+    *played = asked.begun;
+    let file = file.0.get_or_insert_with(|| {
+        let name = interface::effect_file();
+        let bytes = data.read(&name).inspect_err(|error| warn!("the scene's effect is not shown: {error:#}")).ok()?;
+        EffectFile::load(&bytes, &mut stores).inspect_err(|error| warn!("the scene's effect {name}: {error:#}")).ok()
+    });
+    let Some(mut made) = file.as_ref().and_then(|file| file.play(*file.numbers().first()?)) else { return };
+    made.place(at);
+    made.unseen = !scene.drawn;
+    commands.spawn((OfScene { begun: asked.begun }, made));
+}
+
 /// Draws the screen between missions while it is up, unless the MENU it made
 /// has the screen.
 #[allow(clippy::too_many_arguments)]
@@ -176,5 +248,5 @@ fn draw(
 }
 
 pub fn plugin(app: &mut App) {
-    app.init_resource::<Shown>().add_systems(Update, (show, draw).chain().run_if(in_state(crate::Mode::Field)));
+    app.init_resource::<Shown>().init_resource::<SceneEffectFile>().add_systems(Update, (show, show_effect, draw).chain().run_if(in_state(crate::Mode::Field)));
 }
