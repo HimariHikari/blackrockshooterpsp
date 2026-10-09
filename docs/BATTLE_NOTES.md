@@ -759,11 +759,17 @@ dodge, 0xA0 each of her shots, 0x6A the cursor locking on, 0x8E an attack's warn
 (0x91644), 0x6B an enemy called in, 124 a bomb's first landing; a bullet's own sound
 as it leaves and, for a bomb, as it bursts (0x86568: fields 0x28 and 0x90 of its
 record, of the bank field 0x34 names); a status effect's sound as it takes (0x8FC80,
-see "The sound an effect is given with"). Not ported: 0x68 (0x85BEC, 0x8FA88), 0x63
-(0x946F4), 0x11 (0x96B40), 0x82 (0x981BC), and the result screen's (0x3821C: the
-music's volume to 1, the result
-jingle on stream 0 at volume 0x60, 0xB for each tick of the count and 0x66 for a
-level gained).
+see "The sound an effect is given with"); 0x68 as a part of an enemy breaks
+(0x85BEC, from 0x860E8 as its gauge is worn to nought) and as an attack whose
+effect is of kind 26 comes on a guard that is up, hers or an enemy's, and goes
+through it (0x8FA88, asked only where the hit would have been guarded, 0x9AE24
+and 0x925D4); 0x63 as a finish's gauge is full (0x946F4), 0x11 with the log's
+words (0x96B40), 0x82 as an item is used and as a skill acts of itself
+(0x981BC), and the result screen's (0x3821C: the music's volume to 1, the
+result jingle on stream 0 at volume 0x60, 0xB for each tick of the count and
+0x66 for a level gained). All of these are in the port (`SOUND_BREAK` in
+`battle/enemy/actor.rs`, `SOUND_FINISH_FULL`, `log::SOUND_WORDS`, `auto::SOUND`,
+`result::SOUND_COUNT` and `SOUND_LEVEL`).
 
 ### Enemy groups (`enmgrp2.dat`, magic `EGTB`)
 
@@ -2636,7 +2642,7 @@ the white, winged one, at level 35 and at level 55. A battle won against it has
 no last state of hers, none of her skills asked, no results and so nothing
 given for it; her HP is kept and the battle gives way at once. In the port:
 `Group::no_results` in `battle/enemy/mod.rs`, read by `step` and `conclude` in
-`battle/mod.rs`; it has not been run to its end (those fights are not ported).
+`battle/mod.rs`; the fights that have it are the bosses' (see "A boss's battle").
 
 The results' task keeps (0x70 bytes): her level and experience as the battle
 ended (+0x44, +0x30), what was earned (+0x48) and how much of it is counted

@@ -46,6 +46,10 @@ Last brought up to date: 9 October 2026.
 - [x] Her HP gauge flashes for sixteen frames when a hit takes HP off her
       (0x3DB94; not for hits on enemies, which the walkthrough bears out)
 
+- [x] The sound of a break: as a part of an enemy breaks, and as an attack that
+      breaks guards goes through one (0x85BEC, 0x8FA88); not yet heard in play
+      (no enemy was stunned in two test fights)
+
 ### Setting up and sharing
 - [x] On GitHub, code only: none of the game's data is in the repository
 - [x] `brs-setup`: drop the .iso on it, choose a folder, and the game is made

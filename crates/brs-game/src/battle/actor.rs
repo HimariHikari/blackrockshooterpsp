@@ -779,8 +779,9 @@ impl PcActor {
         // not, and nor is one whose effect breaks guards (0x9ADFC-0x9AE44).
         let effect = effects.get(attack.effect);
         let mut guarded = (self.guarding || self.status.has(kind::WARD)) && !attack.unguardable;
-        if effect.is_some_and(Effect::breaks_guard) {
+        if guarded && effect.is_some_and(Effect::breaks_guard) {
             guarded = false;
+            self.status.heard.push(super::enemy::actor::SOUND_BREAK as u32);
         }
         // The record of her guard, while she holds it up, whatever the attack
         // (0x9AE8C): her skills are asked as the hit lands on it, and then, guard

@@ -250,6 +250,9 @@ pub const BANK_OF_ENEMY: i32 = 1;
 pub const BANK_OF_FINISH: i32 = 2;
 // Sounds of the battle's bank: a guarded hit, a warning, an enemy called in.
 pub const SOUND_GUARDED: i32 = 0x6e;
+/// What is heard as a part of an enemy breaks (0x85C34), and as an attack whose
+/// effect breaks guards comes on a guard that is up (0x8FACC): at full volume.
+pub const SOUND_BREAK: i32 = 0x68;
 const SOUND_WARNING: i32 = 0x8e;
 const SOUND_CALLED_IN: i32 = 0x6b;
 
@@ -1048,8 +1051,9 @@ impl EnActor {
         // guards (0x92584-0x925F4).
         let effect = world.effects.get(attack.effect);
         let mut guarded = (body.guarding || body.status.has(kind::WARD)) && !broken && !attack.unguardable;
-        if effect.is_some_and(Effect::breaks_guard) {
+        if guarded && effect.is_some_and(Effect::breaks_guard) {
             guarded = false;
+            sound(world, BANK_OF_BATTLE, SOUND_BREAK, FULL_VOLUME, NOTE);
         }
         let mut factors = status_factors(by.status, &body.status).to_vec();
         // Some attacks do a great deal more to an enemy that is broken (0x9278C).
@@ -1079,8 +1083,10 @@ impl EnActor {
         }
         let mut drained = 0;
         if !killed {
-            // The log says so when the blow breaks it (0x86170).
+            // It is heard when the blow breaks it (0x86164), and the log says so
+            // (0x86170).
             if body.gauges.get_mut(gauge).and_then(Option::as_mut).is_some_and(|worn| worn.wear(attack.break_power)) {
+                sound(world, BANK_OF_BATTLE, SOUND_BREAK, FULL_VOLUME, NOTE);
                 world.events.push(Event::PartLog { line: log::PART_BROKEN, gauge });
             }
             // What the attack carries (0x92984): a share of the damage back to
