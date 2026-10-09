@@ -147,7 +147,7 @@ fn run(asked: Asked) -> Result<()> {
     if !asked.sound {
         println!("  3 of 4: the sound is left for later (--no-sound)");
     } else if ffmpeg_is_there(&folder) {
-        println!("  3 of 4: making the music and the voices playable. This is the long part and can take a good while;");
+        println!("  3 of 4: making the music and the voices playable. This is the longest part, a few minutes;");
         println!("          it can be closed and started again for the same folder, and goes on where it was.");
         sound::convert(&unpacked, asked.jobs)?;
     } else {
@@ -274,7 +274,7 @@ fn ask_for_the_image() -> Result<PathBuf> {
 fn ask_for_the_folder() -> Result<PathBuf> {
     println!("Choose the folder to make the game in (a window has opened for it).");
     let window = "$window = New-Object System.Windows.Forms.FolderBrowserDialog; \
-                  $window.Description = 'Choose the folder to make the game in (about 1.5 GB)'; \
+                  $window.Description = 'Choose the folder to make the game in (about 1.4 GB)'; \
                   $window.ShowNewFolderButton = $true";
     match chosen_in_a_window(window) {
         Some(chosen) => Ok(chosen.into()),

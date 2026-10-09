@@ -17,9 +17,9 @@ In short:
 2. Drag the disc image (`.iso`) of your own copy of the game onto `brs-setup.exe`,
    or double-click `brs-setup.exe` and choose the `.iso` in the window that opens.
    The port was made against the US release (NPUH-10126).
-3. Choose the folder to make the game in (about 1.5 GB) in the window that asks.
-4. Wait while it copies the films, unpacks the data (under a minute), makes the
-   music and voices playable (the long part) and puts the game in the folder. The
+3. Choose the folder to make the game in (about 1.4 GB) in the window that asks.
+4. Wait a few minutes while it copies the films, unpacks the data, makes the
+   music and voices playable and puts the game in the folder. The
    sound is decoded by [ffmpeg](https://ffmpeg.org): if the PC has none, the setup
    fetches it by itself (about 115 MB, from gyan.dev) into the folder.
 5. Open the folder and double-click `brs-game.exe`.

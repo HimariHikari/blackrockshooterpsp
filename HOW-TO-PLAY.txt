@@ -17,13 +17,12 @@ SETTING IT UP (once)
    and choose the .iso in the window that opens).
 
 3. A window asks for a folder: choose or make the folder you want the game
-   in. It takes about 1.5 GB.
+   in. It takes about 1.4 GB.
 
-4. Wait. A black window says what it is doing:
+4. Wait a few minutes. A black window says what it is doing:
      1 of 4  the films are copied
-     2 of 4  the data is unpacked              (under a minute)
-     3 of 4  the music and voices are made playable   (the long part:
-             it can take a good while)
+     2 of 4  the data is unpacked
+     3 of 4  the music and voices are made playable   (the longest part)
      4 of 4  the game is put in the folder
    If the PC has no "ffmpeg" (the program that decodes the game's sound),
    the setup fetches it by itself from gyan.dev (about 115 MB) into the

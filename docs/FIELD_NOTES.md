@@ -1528,8 +1528,15 @@ so it reads `prm` and the missions' records itself. Stand-ins and gaps: nothing
 is guarded yet (value 53 reads 0: the character guarded is the field's + 0xE68,
 by 0x1179F4, and 0x10D370 counts the enemies about it); the save's
 backup and the skills' functions do nothing (what the backup is for is under "A
-mission failed"); the field is not
-left when value 56 is set (a mission's time running out). A script of "kind 2"
+mission failed"). When value 56 is set (the field's flag 0x58: a mission's
+time has run out, or what she guards is lost) the field's frame starts the map
+script's callback for a character with the number in value 57, and clears the
+flag (0x10D6BC to 0x10D6E8: 0x117E14 with 0x39, then 0xE84A0); so "how the
+field is left" is a number the map's own script answers to, as it is for value
+52 (`s96(52, 600)` on `STG02_09`). In the port: `notice_touches` in
+`field/mod.rs`, before whatever she has walked into; not yet tried on a
+mission with a time (`s96(58, 60)` on `STG02_08`, `s96(58, 300)` on
+`STG04_0A`). A script of "kind 2"
 is the loaded event's, of which the system script only asks a function that
 none has (see function 0x33 above).
 
@@ -3062,8 +3069,8 @@ mission is to be tried again the screen comes up over the field, which stands
 still under it: none of its scripts has a frame while the screen is there.
 When a mission has been chosen on it the field starts again from nothing
 (`Scene::afresh`). `--mission n` starts the game on mission n as if it had
-been chosen there, and `--stage-select` on the screen itself. Not ported:
-leaving the field when the system script asks for it (system value 56).
+been chosen there, and `--stage-select` on the screen itself. What the
+system script's value 56 has the field do is under "The field's system script".
 
 ## A mission failed
 

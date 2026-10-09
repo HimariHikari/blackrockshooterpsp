@@ -2058,6 +2058,18 @@ fn notice_touches(
         state.event_over = true;
     }
 
+    // The system script has the field left (its value 56, the field's flag 0x58:
+    // a mission's time has run out, or what she guards is lost). The field then
+    // starts the map script's callback for a character with the number the
+    // system script gave to say how (its value 57), and the map's script sees to
+    // the rest (0x10D6BC to 0x10D6E8, 0x117E14 with 0x39, 0xE84A0). It comes
+    // before whatever she has walked into.
+    let leaves = idle && state.scene.flag(scene::field_flag::LEAVE);
+    if leaves {
+        state.scene.set_flag(scene::field_flag::LEAVE, false);
+    }
+    let left_by = leaves.then(|| Callback::Character(state.scene.values.get(&value::EXIT).copied().unwrap_or(0)));
+
     // An enemy that has caught her comes first.
     let mut found = std::mem::take(&mut state.asked).first().map(|&id| Callback::Character(id)).filter(|_| idle);
     let (facing, lay) = state.scene.player().map_or((0.0, Quat::IDENTITY), |player| (player.facing(), player.lay));
@@ -2124,8 +2136,8 @@ fn notice_touches(
         });
     }
 
-    let (Some(callback), Some(script)) = (found, &mut state.script) else { return };
-    debug!("the player has walked into {callback:?}");
+    let (Some(callback), Some(script)) = (left_by.or(found), &mut state.script) else { return };
+    debug!("the player has walked into {callback:?}{}", if left_by.is_some() { " (the system script has the field left)" } else { "" });
     if let Callback::Character(id) = callback {
         state.event_of = Some(id);
     }
