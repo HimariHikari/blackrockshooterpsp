@@ -38,13 +38,19 @@ const WRONG: Color = Color::srgb(1.0, 0.55, 0.45);
 /// Seconds the last word stays up before the game is started.
 const BEFORE_THE_GAME: f32 = 1.0;
 
-/// Where the game is made when it is nowhere yet: in the folder of the source
-/// the program was built from, if it lies in one (and not in what a build
-/// makes, which is cleared away), or else in the program's own folder.
+/// Where the game is made when it is nowhere yet: in the program's own folder;
+/// or, where the program lies as a build of its source leaves it
+/// (`target/<profile>` under the source), in the source's folder, since what a
+/// build makes is cleared away.
 pub fn home() -> PathBuf {
     let Ok(program) = std::env::current_exe() else { return PathBuf::from(".") };
-    let source = program.ancestors().skip(1).find(|folder| folder.join("Cargo.toml").is_file());
-    source.or(program.parent()).map_or_else(|| PathBuf::from("."), Path::to_owned)
+    home_of(&program)
+}
+
+fn home_of(program: &Path) -> PathBuf {
+    let Some(folder) = program.parent() else { return PathBuf::from(".") };
+    let built = folder.parent().filter(|target| target.file_name().is_some_and(|name| name == "target")).and_then(Path::parent);
+    built.filter(|source| source.join("Cargo.toml").is_file()).unwrap_or(folder).to_owned()
 }
 
 /// Whether the game is yet to be made in the folder the program is in now:
@@ -359,5 +365,43 @@ fn picture(mut commands: Commands, mut pictures: ResMut<Pictures>, setup: Res<Se
     if !matches!(setup.stage, Stage::Making) && over {
         commands.spawn(screenshot(offscreen.as_deref())).observe(save_to_disk(named("end".into())));
         pictures.last = Some(now);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_game_is_made_beside_the_program_or_in_the_source_it_was_built_from() {
+        // A program somebody was given: its own folder, whatever lies above it.
+        assert_eq!(home_of(Path::new("/games/brs/brs-game")), Path::new("/games/brs"));
+        // A build of this source: the source's folder, not what the build makes.
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).parent().and_then(Path::parent).unwrap();
+        assert_eq!(home_of(&source.join("target").join("debug").join("brs-game")), source);
+        // A folder that is only named as a build's is: the program's own.
+        assert_eq!(home_of(Path::new("/nowhere/target/debug/brs-game")), Path::new("/nowhere/target/debug"));
+    }
+
+    #[test]
+    fn the_bar_is_as_full_as_the_share_that_is_done() {
+        assert_eq!(share(0, 0), 0.0);
+        assert_eq!(share(1, 4), 0.25);
+        assert_eq!(share(9, 4), 1.0);
+    }
+
+    #[test]
+    fn the_window_says_what_is_being_done() {
+        let mut setup = Setup { home: PathBuf::from("here"), stage: Stage::Asking { wrong: None, choosing: None }, told: default(), over: false, again: Vec::new(), starts: false };
+        assert!(words(&setup).0.contains("Drop"));
+        setup.over = true;
+        assert_eq!(words(&setup).0, "Let go to begin");
+        setup.stage = Stage::Making;
+        setup.told.lock().unwrap().doing = Some(Doing::Data { done: 5, of: 10 });
+        let (first, second, filled, wrong) = words(&setup);
+        assert!(first.starts_with("2 of 3") && second.starts_with("5 of 10") && filled == Some(0.5) && !wrong);
+        setup.stage = Stage::Asking { wrong: Some("this is not a disc image".into()), choosing: None };
+        let (first, second, filled, wrong) = words(&setup);
+        assert!(first == "It did not work" && second.starts_with("this is not a disc image") && filled.is_none() && wrong);
     }
 }

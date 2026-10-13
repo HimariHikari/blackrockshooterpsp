@@ -157,7 +157,7 @@ fn ffmpeg_is_there(folder: &Path, report: &(dyn Fn(Doing) + Sync)) -> bool {
     let program = format!("ffmpeg{}", std::env::consts::EXE_SUFFIX);
     if find(&tools, &program, 4).is_none() && cfg!(windows) {
         report(Doing::Ffmpeg { fetched: 0 });
-        if let Err(error) = fetch_ffmpeg(&tools, report) {
+        if let Err(error) = fetch(&tools, FFMPEG_ARCHIVE, report) {
             eprintln!("ffmpeg could not be fetched: {error:#}");
         }
     }
@@ -172,14 +172,14 @@ fn ffmpeg_is_there(folder: &Path, report: &(dyn Fn(Doing) + Sync)) -> bool {
     runs()
 }
 
-/// Fetches a build of ffmpeg for Windows and unpacks it, with the tools Windows
-/// has for both.
-fn fetch_ffmpeg(tools: &Path, report: &(dyn Fn(Doing) + Sync)) -> Result<()> {
+/// Fetches the archive of a build of ffmpeg for Windows and unpacks it into
+/// `tools`, with the tools Windows has for both.
+fn fetch(tools: &Path, from: &str, report: &(dyn Fn(Doing) + Sync)) -> Result<()> {
     fs::create_dir_all(tools)?;
     let archive = tools.join("ffmpeg.zip");
     let system = PathBuf::from(std::env::var_os("SystemRoot").unwrap_or_else(|| "C:\\Windows".into())).join("System32");
     let mut curl = Command::new(system.join("curl.exe"));
-    curl.args(["-L", "--fail", "-sS", "-o"]).arg(&archive).arg(FFMPEG_ARCHIVE).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::piped());
+    curl.args(["-L", "--fail", "-sS", "-o"]).arg(&archive).arg(from).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::piped());
     unseen(&mut curl);
     let mut fetching = curl.spawn().context("running curl")?;
     let fetched = loop {
@@ -265,4 +265,72 @@ pub fn choose_the_image() -> Option<PathBuf> {
                   $window.Title = 'Choose the disc image (.iso) of Black Rock Shooter: The Game'; \
                   $window.Filter = 'Disc images (*.iso)|*.iso|All files (*.*)|*.*'";
     chosen_in_a_window(window).map(PathBuf::from)
+}
+
+#[cfg(all(test, windows))]
+mod tests {
+    use std::sync::Mutex;
+
+    use super::*;
+
+    /// A folder of this test's own under what the build makes, empty.
+    fn scratch(name: &str) -> PathBuf {
+        let project = Path::new(env!("CARGO_MANIFEST_DIR")).parent().and_then(Path::parent).unwrap();
+        let folder = project.join("target").join("setup-tests").join(name);
+        let _ = fs::remove_dir_all(&folder);
+        fs::create_dir_all(&folder).unwrap();
+        folder
+    }
+
+    /// An archive is fetched, unpacked and put away, and the program in it is
+    /// found: with an archive of this computer's own in the internet's stead.
+    #[test]
+    fn an_archive_is_fetched_and_unpacked_and_its_program_found() {
+        let scratch = scratch("fetched");
+        let bin = scratch.join("made").join("ffmpeg-0.0-essentials_build").join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fs::write(bin.join("ffmpeg.exe"), b"not a program").unwrap();
+        let archive = scratch.join("made.zip");
+        let system = PathBuf::from(std::env::var_os("SystemRoot").unwrap()).join("System32");
+        let zipped = Command::new(system.join("tar.exe")).args(["-a", "-cf"]).arg(&archive).arg("-C").arg(scratch.join("made")).arg("ffmpeg-0.0-essentials_build").status().unwrap();
+        assert!(zipped.success());
+
+        let tools = scratch.join("tools");
+        let told = Mutex::new(Vec::new());
+        let from = format!("file:///{}", archive.to_string_lossy().replace('\\', "/"));
+        fetch(&tools, &from, &|doing| told.lock().unwrap().push(doing)).unwrap();
+        assert_eq!(find(&tools, "ffmpeg.exe", 4), Some(tools.join("ffmpeg-0.0-essentials_build").join("bin").join("ffmpeg.exe")));
+        assert!(!tools.join("ffmpeg.zip").exists(), "the archive is put away once it is unpacked");
+        assert!(told.lock().unwrap().iter().all(|doing| matches!(doing, Doing::Ffmpeg { .. })));
+        let _ = fs::remove_dir_all(&scratch);
+    }
+
+    /// An archive that cannot be had is an error that says why, and leaves
+    /// nothing behind to be taken for one.
+    #[test]
+    fn an_archive_that_is_not_there_is_not_fetched() {
+        let scratch = scratch("missing");
+        let tools = scratch.join("tools");
+        let from = format!("file:///{}", scratch.join("none.zip").to_string_lossy().replace('\\', "/"));
+        let error = fetch(&tools, &from, &|_| {}).unwrap_err();
+        assert!(format!("{error:#}").contains("did not come through"), "{error:#}");
+        assert!(!tools.join("ffmpeg.zip").exists());
+        assert_eq!(find(&tools, "ffmpeg.exe", 4), None);
+        let _ = fs::remove_dir_all(&scratch);
+    }
+
+    /// A setup that was begun is known by its file, which names the disc
+    /// image for as long as that is where it was.
+    #[test]
+    fn a_setup_begun_names_its_disc_image_while_that_is_there() {
+        let scratch = scratch("begun");
+        assert_eq!(begun_from(&scratch), None);
+        let image = scratch.join("game.iso");
+        fs::create_dir_all(scratch.join("game")).unwrap();
+        fs::write(scratch.join(BEGUN), image.to_string_lossy().as_bytes()).unwrap();
+        assert_eq!(begun_from(&scratch), None, "the disc image is gone");
+        fs::write(&image, b"").unwrap();
+        assert_eq!(begun_from(&scratch), Some(image));
+        let _ = fs::remove_dir_all(&scratch);
+    }
 }
