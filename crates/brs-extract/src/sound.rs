@@ -42,9 +42,22 @@ struct Tally {
 }
 
 /// Converts every recording under `root` that has no `.ogg` beside it yet, `jobs` at
-/// a time.
+/// a time, and says how far it is now and then.
 pub fn convert(root: &Path, jobs: usize) -> Result<()> {
-    if Command::new("ffmpeg").arg("-version").stdout(Stdio::null()).stderr(Stdio::null()).status().is_err() {
+    convert_reporting(root, jobs, &|done, of| {
+        if done % 250 == 0 {
+            println!("  {done} of {of}");
+        }
+    })
+}
+
+/// The same, telling `report` after each recording how many are through, and of
+/// how many.
+pub fn convert_reporting(root: &Path, jobs: usize, report: &(dyn Fn(usize, usize) + Sync)) -> Result<()> {
+    let mut ffmpeg = Command::new("ffmpeg");
+    ffmpeg.arg("-version").stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+    quietly(&mut ffmpeg);
+    if ffmpeg.status().is_err() {
         bail!("ffmpeg is not on the PATH: it is what decodes the game's recordings");
     }
     let mut recordings = Vec::new();
@@ -64,10 +77,7 @@ pub fn convert(root: &Path, jobs: usize) -> Result<()> {
                     Ok(false) => tally.there += 1,
                     Err(error) => tally.failed.push(format!("{}: {error:#}", path.display())),
                 }
-                let done = tally.made + tally.there + tally.failed.len();
-                if done % 250 == 0 {
-                    println!("  {done} of {}", recordings.len());
-                }
+                report(tally.made + tally.there + tally.failed.len(), recordings.len());
             });
         }
     });

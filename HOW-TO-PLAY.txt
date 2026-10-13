@@ -11,33 +11,34 @@ You need no command line and nothing else installed.
 SETTING IT UP (once)
 --------------------
 
-1. Have the disc image (.iso) of your copy of the game somewhere on the PC.
+1. Put  brs-game.exe  in the folder you want the game in. The game is made
+   beside it and takes about 1.4 GB.
 
-2. Drag the .iso onto  brs-setup.exe  (or just double-click brs-setup.exe
-   and choose the .iso in the window that opens).
+2. Double-click  brs-game.exe . The first time, a window opens that says
+   "Drop the game's disc image (.iso) here".
 
-3. A window asks for a folder: choose or make the folder you want the game
-   in. It takes about 1.4 GB.
+3. Drag the .iso of your copy of the game onto that window and let go.
+   (Or click the window and choose the .iso. Or skip step 2 and drag the
+   .iso straight onto  brs-game.exe .)
 
-4. Wait a few minutes. A black window says what it is doing:
-     1 of 4  the films are copied
-     2 of 4  the data is unpacked
-     3 of 4  the music and voices are made playable   (the longest part)
-     4 of 4  the game is put in the folder
+4. Wait a few minutes. The window says what it is doing, with a bar:
+     1 of 3  copying the films
+     2 of 3  unpacking the game
+     3 of 3  making the music and the voices playable   (the longest part)
    If the PC has no "ffmpeg" (the program that decodes the game's sound),
-   the setup fetches it by itself from gyan.dev (about 115 MB) into the
-   folder you chose. That needs the internet, this once.
+   it is fetched by itself from gyan.dev (about 115 MB) into the game's
+   folder. That needs the internet, this once.
 
-5. When it says "Done", press Enter to close the window.
+5. The game starts by itself when it is ready.
 
-It can be closed and started again at any time for the same folder: it
-goes on where it was. Your .iso is only read, never changed.
+The window can be closed at any time: the next time brs-game.exe is opened
+it goes on where it was. Your .iso is only read, never changed.
 
 
 PLAYING
 -------
 
-Open the folder you chose and double-click  brs-game.exe .
+Double-click  brs-game.exe . Once the game is made, that starts it.
 
    Stick or WASD ........ move
    Arrow keys / mouse ... camera
@@ -53,9 +54,14 @@ IF SOMETHING GOES WRONG
     The file is not an .iso. A compressed one (.cso) has to be made an
     .iso first (the emulator PPSSPP can do that, for one).
 
-No sound
-    Step 3 did not finish, or ffmpeg could not be fetched. Run the setup
-    again for the same folder.
+"The game is ready, but without its sound"
+    ffmpeg could not be fetched (no internet, most likely). The game can be
+    played silent. For the sound, drag the .iso onto  brs-game.exe  again
+    when the internet is there: it only does what is still missing.
+
+It cannot write where it is
+    Move  brs-game.exe  to a folder of your own (Documents, the desktop,
+    another drive) and not one of Windows' own, and open it there.
 
 Windows warns about an unknown program
-    The programs are not signed. "More info" > "Run anyway" starts them.
+    The program is not signed. "More info" > "Run anyway" starts it.

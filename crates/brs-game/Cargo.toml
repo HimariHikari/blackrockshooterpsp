@@ -7,4 +7,5 @@ edition.workspace = true
 anyhow.workspace = true
 bevy = "0.19"
 brs-engine = { path = "../brs-engine" }
+brs-extract = { path = "../brs-extract" }
 brs-formats = { path = "../brs-formats" }

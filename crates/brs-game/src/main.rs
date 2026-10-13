@@ -1,6 +1,7 @@
 //! The port: a native reimplementation that plays from the original game's data.
 //!
-//! Usage: `brs-game [--data <unpacked folder>] [--title] [--cleared] [--map <stage>]
+//! Usage: `brs-game [the game's .iso] [--home <folder>]
+//!         [--data <unpacked folder>] [--title] [--cleared] [--map <stage>]
 //!         [--mission <number>]
 //!         [--start <x>,<z>] [--play-events] [--skip-battles] [--skip-messages]
 //!         [--lose-battle <group>] [--fight <group>] [--stage-select]
@@ -13,6 +14,16 @@
 //!         [--screenshot <png>] [--screenshot-at <seconds>] [--background] [--window]
 //!         [--size <across>x<down>] [--mute]
 //!         [--slow <seconds>:<times>] [--verbose]`
+//!
+//! Started where the game's data has not been made yet (`game/unpacked`, in the
+//! folder it is started in or in one above the program), it makes it first: it
+//! opens a window for the disc image of the game to be dropped on, unpacks it
+//! into the program's own folder and starts again as the game (`setup.rs`). A
+//! disc image dropped on the program itself comes as its first word and does the
+//! same, and goes on with a setup that was left unfinished. `--home <folder>`
+//! names another folder than the program's own for the game to be in, or to be
+//! made in. A run that opens no window makes the game only where `--home` says,
+//! saves its pictures as it goes and one at the end, and starts nothing.
 //!
 //! By default the game begins as the original does, on its title: the maker's
 //! mark, PRESS START, and the menu on which NEW GAME begins a game (`--title` says
@@ -142,6 +153,7 @@ mod clock;
 mod records;
 mod save;
 mod save_screen;
+mod setup;
 mod sound;
 mod text;
 mod title;
@@ -177,6 +189,11 @@ const EXIT_DELAY: f32 = 1.5;
 
 struct Args {
     data: PathBuf,
+    /// The folder the game is in, or is to be made in, when it is not the one
+    /// the program finds for itself.
+    home: Option<PathBuf>,
+    /// The disc image to make the game from: one dropped on the program.
+    image: Option<PathBuf>,
     map: String,
     start: Option<Vec2>,
     /// Whether the game begins on its title: as asked for, or else unless a
@@ -277,9 +294,45 @@ fn go_to_the_data(data: &Path) {
     }
 }
 
+/// Whether what was given the program is a disc image: one dropped on it comes
+/// as its name alone.
+fn is_image(given: &str) -> bool {
+    !given.starts_with("--") && Path::new(given).extension().is_some_and(|kind| kind.eq_ignore_ascii_case("iso") || kind.eq_ignore_ascii_case("cso"))
+}
+
+/// What the game is started with once it has been made: what this was started
+/// with, less the disc image and the folder, which it is started in.
+fn again() -> Vec<String> {
+    let (mut given, mut again) = (std::env::args().skip(1), Vec::new());
+    while let Some(arg) = given.next() {
+        if arg == "--home" {
+            given.next();
+        } else if !is_image(&arg) {
+            again.push(arg);
+        }
+    }
+    again
+}
+
 fn main() -> Result<()> {
     let args = parse_args()?;
-    go_to_the_data(&args.data);
+    match &args.home {
+        Some(home) => {
+            std::fs::create_dir_all(home).with_context(|| format!("making {}", home.display()))?;
+            std::env::set_current_dir(home).with_context(|| format!("going to {}", home.display()))?;
+        }
+        None => go_to_the_data(&args.data),
+    }
+    // Where the game has not been made yet, or a disc image was dropped on the
+    // program, it is made first, in a window of its own (`setup`). A run nobody
+    // watches makes it only where `--home` says.
+    let unseen = args.background || args.screenshot.is_some();
+    if args.data == Path::new(DEFAULT_DATA) && (setup::wanted(&args.data) || args.image.is_some()) && (!unseen || args.home.is_some()) {
+        let here = args.home.is_some() || args.data.join("FLD").is_dir() || Path::new(setup::BEGUN).is_file();
+        let home = if here { std::env::current_dir().context("finding the folder the game is in")? } else { setup::home() };
+        let unseen = unseen.then(|| setup::Unseen { path: args.screenshot.clone().unwrap_or_else(|| "setup.png".into()), at: args.screenshot_at.clone() });
+        return setup::open(home, args.image, again(), unseen);
+    }
     let data = GameData::new(&args.data)?;
 
     let mut app = App::new();
@@ -410,6 +463,8 @@ fn main() -> Result<()> {
 fn parse_args() -> Result<Args> {
     let mut args = Args {
         data: DEFAULT_DATA.into(),
+        home: None,
+        image: None,
         map: DEFAULT_MAP.into(),
         start: None,
         title: None,
@@ -442,6 +497,8 @@ fn parse_args() -> Result<Args> {
         let mut value = || it.next().with_context(|| format!("{arg} needs a value"));
         match arg.as_str() {
             "--data" => args.data = value()?.into(),
+            "--home" => args.home = Some(std::path::absolute(value()?).context("--home takes a folder")?),
+            _ if is_image(&arg) => args.image = Some(std::path::absolute(&arg).with_context(|| format!("finding {arg}"))?),
             "--title" => args.title = Some(true),
             "--cleared" => args.field.cleared = true,
             "--map" => {
@@ -517,7 +574,7 @@ fn parse_args() -> Result<Args> {
             }
             "--saves" => args.saves = value()?.into(),
             "--script" => args.script = Script::parse(&value()?)?,
-            "--screenshot" => args.screenshot = Some(value()?.into()),
+            "--screenshot" => args.screenshot = Some(std::path::absolute(value()?).context("--screenshot takes a file's name")?),
             "--screenshot-at" => {
                 let times = value()?;
                 let times: Result<Vec<f32>, _> = times.split(',').map(str::parse).collect();

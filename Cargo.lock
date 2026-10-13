@@ -1913,7 +1913,7 @@ dependencies = [
 
 [[package]]
 name = "brs-engine"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bevy",
@@ -1924,7 +1924,7 @@ dependencies = [
 
 [[package]]
 name = "brs-extract"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "brs-formats",
@@ -1933,7 +1933,7 @@ dependencies = [
 
 [[package]]
 name = "brs-formats"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "flate2",
@@ -1941,17 +1941,18 @@ dependencies = [
 
 [[package]]
 name = "brs-game"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bevy",
  "brs-engine",
+ "brs-extract",
  "brs-formats",
 ]
 
 [[package]]
 name = "brs-viewer"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "bevy",

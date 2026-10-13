@@ -20,7 +20,8 @@ if errorlevel 1 (
     exit /b 1
 )
 echo.
-echo Done. Now drag the .iso of your copy of the game onto
-echo     %~dp0target\debug\brs-setup.exe
-echo and choose the folder to make the game in (see HOW-TO-PLAY.txt).
+echo Done. Now double-click  play.cmd  (or %~dp0target\debug\brs-game.exe)
+echo and drag the .iso of your copy of the game onto the window that opens:
+echo the game is made in this folder, under "game", and then starts
+echo (see HOW-TO-PLAY.txt).
 pause

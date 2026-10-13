@@ -11,22 +11,24 @@ game, kept locally under `game/`, which is ignored by git.
 No command line and nothing to install: see [HOW-TO-PLAY.txt](HOW-TO-PLAY.txt).
 In short:
 
-1. Take `brs-pc-port-windows.zip` from this project's **Releases** page and unzip it.
-   It has the game (`brs-game.exe`), the setup program (`brs-setup.exe`) and the
-   how-to; none of the game itself.
-2. Drag the disc image (`.iso`) of your own copy of the game onto `brs-setup.exe`,
-   or double-click `brs-setup.exe` and choose the `.iso` in the window that opens.
+1. Take `brs-pc-port-windows.zip` from this project's **Releases** page and unzip it
+   into the folder you want the game in (it takes about 1.4 GB there). It has the
+   game (`brs-game.exe`) and the how-to; none of the game itself.
+2. Double-click `brs-game.exe`. Where the game has not been made yet it opens a
+   window that asks for the disc image.
+3. Drag the disc image (`.iso`) of your own copy of the game onto that window (or
+   click it and choose the file; or drag the `.iso` onto `brs-game.exe` itself).
    The port was made against the US release (NPUH-10126).
-3. Choose the folder to make the game in (about 1.4 GB) in the window that asks.
-4. Wait a few minutes while it copies the films, unpacks the data, makes the
-   music and voices playable and puts the game in the folder. The
-   sound is decoded by [ffmpeg](https://ffmpeg.org): if the PC has none, the setup
-   fetches it by itself (about 115 MB, from gyan.dev) into the folder.
-5. Open the folder and double-click `brs-game.exe`.
+4. Wait a few minutes while it copies the films, unpacks the data and makes the
+   music and voices playable, with a bar for each. The sound is decoded by
+   [ffmpeg](https://ffmpeg.org): if the PC has none, it is fetched by itself
+   (about 115 MB, from gyan.dev) into the folder.
+5. The game starts by itself, and from then on `brs-game.exe` is the game.
 
-The setup can be closed and started again for the same folder: it goes on where it
+The window can be closed at any time: opened again, the program goes on where it
 was. The `.iso` is only read. None of the game's data is in this repository, and
-none should be put in it.
+none should be put in it. (`brs-game.exe --home <folder>` makes and keeps the game
+in another folder than the program's own.)
 
 ## Building it yourself
 
@@ -40,16 +42,18 @@ begins with `v`, which makes a release of it). To build on your own PC you need
 cargo build -p brs-game -p brs-extract
 ```
 
-That makes `brs-game` and `brs-setup` in `target/debug`; `brs-setup` is used as
-above, or from a command line as `brs-setup game.iso folder` (`--no-sound` leaves the
-sound out, `--jobs <n>` has it decode so many recordings at once).
+That makes `brs-game` and `brs-setup` in `target/debug`. `brs-game` is used as
+above (built from source it makes the game in the source's folder, under `game/`,
+not in `target`). `brs-setup` does the same setup without a window, into any
+folder: `brs-setup game.iso folder` (`--no-sound` leaves the sound out, `--jobs <n>`
+has it decode so many recordings at once); both are `brs_extract::setup`.
 
 ## Layout
 
 | Path | What it is |
 | --- | --- |
 | `crates/brs-formats` | Library: readers for the game's file formats, and the script interpreter |
-| `crates/brs-extract` | Command-line tools: `brs-extract` unpacks the game data, checks that every known format parses, and makes the recordings playable; `brs-setup` does all of it from a disc image, into a folder of your choosing |
+| `crates/brs-extract` | Library and command-line tools: `brs-extract` unpacks the game data, checks that every known format parses, and makes the recordings playable; `brs_extract::setup` does all of it from a disc image, which is what the game's first window runs and what `brs-setup` runs without a window, into a folder of your choosing |
 | `crates/brs-engine` | Library: Bevy code shared by the viewer and the game (models, animation, maps, collision, sound) |
 | `crates/brs-viewer` | Bevy app: shows one model or map from the game data |
 | `crates/brs-game` | Bevy app: the port itself |

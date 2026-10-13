@@ -54,7 +54,15 @@ Last brought up to date: 9 October 2026.
 - [x] On GitHub, code only: none of the game's data is in the repository
 - [x] `brs-setup`: drop the .iso on it, choose a folder, and the game is made
       there, sound included (tried whole: 3 minutes, 1.4 GB)
-- [x] GitHub builds the Windows bundle itself, and release `v0.1.0` has it
+- [x] One program for a player: `brs-game.exe` opened where the game has not
+      been made yet shows a window to drop the .iso on (or click to choose it;
+      or the .iso is dropped on the program), makes the game beside itself
+      with a bar for each part, and starts it; closed half-way, it goes on the
+      next time (`crates/brs-game/src/setup.rs`, `brs_extract::setup`, which
+      `brs-setup` now runs too). Tried whole without a window, into a fresh
+      folder, and the game made there started
+- [x] GitHub builds the Windows bundle itself (the game and the how-to), and
+      a release has it
 
 ## Seen in play (reported 13 October 2026)
 
@@ -235,8 +243,12 @@ Last brought up to date: 9 October 2026.
 
 ### For a person to try (cannot be done unattended)
 - [ ] The release bundle from GitHub, unzipped and used
+- [ ] The setup window with a real mouse: an .iso dragged onto it, the click
+      that opens the window for choosing one, and the game starting from it
+      (its pictures and the whole of what it does were checked without a
+      window, which cannot show a drag or a click)
 - [ ] `brs-setup`'s two windows (choose the .iso, choose the folder)
-- [ ] `brs-setup` fetching ffmpeg on a PC that has none
+- [ ] ffmpeg being fetched on a PC that has none
 
 ### Known difference
 - A window a script puts up has its frame before the script's, where the

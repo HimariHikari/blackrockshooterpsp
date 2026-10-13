@@ -2,5 +2,6 @@
 //! the game's data, and making its recordings playable.
 
 pub mod iso;
+pub mod setup;
 pub mod sound;
 pub mod unpack;

@@ -1,5 +1,6 @@
-# Builds the port for Windows and bundles what a player needs: the game, the
-# setup program and how to use them. None of the game's data is in it.
+# Builds the port for Windows and bundles what a player needs: the game, which
+# makes itself ready from a disc image dropped on its window, and how to use it.
+# None of the game's data is in it.
 #
 # It runs when asked for by hand (Actions > Build > Run workflow), which leaves
 # the bundle with the run to be downloaded, and for every tag that begins with
@@ -28,7 +29,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory bundle | Out-Null
-          Copy-Item target/debug/brs-game.exe, target/debug/brs-setup.exe, HOW-TO-PLAY.txt bundle/
+          Copy-Item target/debug/brs-game.exe, HOW-TO-PLAY.txt bundle/
           Compress-Archive -Path bundle/* -DestinationPath brs-pc-port-windows.zip
       - uses: actions/upload-artifact@v4
         with:
