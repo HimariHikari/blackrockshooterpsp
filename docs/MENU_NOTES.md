@@ -1355,13 +1355,20 @@ MENU (+ 0x54, + 0x58: the title's options, 0x5CAE0) is left out. Run unseen:
 (cross on the MENU's fourth entry; it takes the pad 28 frames of the port's
 logic later). It has not been compared with the walkthrough yet.
 
-Not ported: the sign of loading (nothing is waited for), the frozen picture
-of the field for the frame or two before the menu is made (the field's scene
-stands still there instead), whatever 0x1869C does to the sound as the menu
-comes and goes, and the options being kept from one run to the next (they are
-of the system's save, which the port has none of yet).
+Left out, there being nothing for them to do: the sign of loading (nothing is
+waited for), and the frozen picture of the field for the frame or two before
+the menu is made (the field's scene stands still there instead). 0x1869C,
+which the menu calls as it comes and as it goes (0xF19B8, 0xF1AAC; the option
+screen and the stage select's side likewise), is not the sound's: it tells
+two tasks kept among the filters of the scene's picture (those at the game's
++ 0x20038 and + 0x20030, with 0x101C and 0x1006; Bloom is at + 0x2003C and
+Focus at + 0x20040) that the menu is up or gone. Which two they are has not
+been followed; the port has the one filter it uses, the glare, off while the
+menu is up (`show_glare` in `field/mod.rs`), which is what that comes to. The
+options are kept from one run to the next in the system data (`save::System`,
+`SAVE_NOTES.md`).
 
-Not read yet: the sign of loading. (The stage select is
+Not read: the sign of loading itself. (The stage select is
 `STAGE_SELECT_NOTES.md`, the title `TITLE_NOTES.md`, saving `SAVE_NOTES.md`.)
 
 ### The start window: the pause

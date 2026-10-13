@@ -152,9 +152,18 @@ Last brought up to date: 9 October 2026.
       walkthrough pixel by pixel. The picture stands whole under the effect's
       own dark sheet (0.37 of it shows, there and in the port), as the port
       had it all along; nothing to change
-- [ ] Battle: the sky's own near and far planes (no boss's script asks for them)
-- [ ] Menu: the sign of loading and the frozen picture (`MENU_NOTES.md`)
-- [ ] `FORMAT_NOTES.md`, "Not done"
+- [x] Battle: the sky's own near and far planes: every enemy's script was
+      gone through, and the 89 calls of that function all ask for the other
+      thing it does; none asks for the sky's planes, so there is nothing to port
+- [x] Menu: the sign of loading and the frozen picture: nothing loads slowly
+      enough on a PC to show a sign for, and the field standing still is the
+      frozen picture. The routine noted there as doing something to the sound
+      switches the picture's filters for the menu instead, and the port has
+      its glare off while the menu is up; and the options are kept between
+      runs (the note was out of date)
+- [x] `FORMAT_NOTES.md`, "Not done": it was the fog, which is the scene
+      script's to set and has been in since the field's and the battle's were
+      ported; the heading is put right
 - [x] What the field's flag 0x50 does to the camera: read again. It would have
       the camera come in on her and look straight at her, but nothing in the game
       ever sets the flag, so there is nothing to port

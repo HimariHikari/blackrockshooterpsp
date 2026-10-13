@@ -603,7 +603,7 @@ of a map, and has it write none.
 `brs-extract --map <file.stcm>` lists a map's batches in order with how each is
 drawn.
 
-### Not done
+### The fog
 
 The fog itself is not the map's but its
 scene's: a field map's scene script sets it (`FIELD_NOTES.md`), a battle map's

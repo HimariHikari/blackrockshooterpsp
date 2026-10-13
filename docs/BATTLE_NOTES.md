@@ -2273,6 +2273,9 @@ ends as the alpha that mixes them has not been followed through the PSP's
 graphics calls; the second bit draws something else, not read.) A map's script
 has it too, `s232(what, value)` with 0 to 6 for making it and for the same
 things (0xC19F8), and no script of the game calls that; only the scope uses it.
+(The filter kept beside it, "Bloom", `filterBloomStart` at 0x19378, is made by
+`s233` alone, 0xC1AB0, which no script calls either: of the picture's filters
+the game uses the glare, `s153` and `s254`, and this one in the scope.)
 
 Not ported: the port's pictures of the scene have no depth to read afterwards,
 so this wants a pass of its own. Until then the two snipes' backdrops are sharp
@@ -3120,10 +3123,11 @@ All of it is ported: `tools_re/bscr_coverage.py` finds nothing that any of the 8
 enemy scripts calls, starts or fires that the port lacks. The second boss is seen
 in `tools_re/out/fx/field/boss2_fight_sheet.png` (`--battle STG02_06 --group 4`);
 groups 5 to 10 are the other five and the last one's two forms, and run through
-`tools_re/trial.py` without a warning of the port's own. Not done: the sky's own
-near and far planes (71 with 0), which no boss's script asks for; and none of the
-bosses but the first has been compared with the walkthrough yet (all seven are
-met from the field, above).
+`tools_re/trial.py` without a warning of the port's own. Left out: the sky's own
+near and far planes (71 with 0), which no script of an enemy or a boss asks for.
+The bosses have been looked at beside the walkthrough (the first closely, the
+others in single frames: docs/compare/boss3_walkthrough.jpg and on); the timing
+of their moves has not been measured there.
 
 Four battle maps (`MAP_B_STG02_06`, `STG03_04`, `STG04_03` and `STG06_04`) have
 their script as `btlmap02.bms` and not by the map's own name: the port takes the
