@@ -1510,7 +1510,10 @@ where a ray does, up to fifty off across and up or down (0x88288).
 **A status effect given** (0x8FC80): one of three effects where its bearer stands,
 with its sound; see "The sound an effect is given with".
 
-Not ported: an enemy's effects standing still while the enemy is in hit stop.
+An enemy is never in hit stop: its scripts can ask whether it is (function
+26 with 13) and are always answered no, for nothing sets it; so its effects
+never stand still for one either. (Its "hit-stop setting", parameter 0x38
+and function 19 with 3, is what its blows give her.)
 
 ### The effects of her skills' scenes
 
@@ -1751,8 +1754,9 @@ The icons by the gauges and the log's lines are under "The display" ("The marks 
 status effects", "The log"). `--afflict 602,1101` gives her and every enemy those
 effects as the first fight begins, for a look at them.
 
-Not ported: the effect's show (its sound is). The check before a skill and a
-boost ending as she uses one are under "Her skills".
+What is shown as an effect is given is under "The sound an effect is given
+with" (`status::burst`). The check before a skill and a boost ending as she
+uses one are under "Her skills".
 
 ## Her items (`BtItemMenu` 0x94DD4, `BtItemMng` 0x950EC, `ifBtlMenuTask` 0x34234)
 
@@ -2236,8 +2240,43 @@ the new lens (0x8BA6C, 0x8BAC8: a length on the screen is `2 z tan(fov / 2) x
 pixels / 272` in the world and back) and eased by `1 - (1 - a)^3`. They are
 added to the middle of every camera of the scene (0x8BEEC, 0xA30C8), which
 moves the picture the other way: what the cursor is on comes to the middle of
-the screen, where the sight is. It also sets three depth figures from the
-enemy's distance (0x19B68, 0x19BC8, 0x19C28), which have not been read.
+the screen, where the sight is. It also sets three figures from the enemy's
+distance (0x19B68, 0x19BC8, 0x19C28), which are those of a filter over the
+picture: what is behind the enemy is blurred.
+
+**The filter that blurs by depth** ("Focus", the task `filterFocusEffectStart`
+makes: 0x19A1C, kept at the game's + 0x20040; its routine 0x1C23C, its object
+0x410 bytes: a table of 256 colours, + 0x400 whether it is on, + 0x401 whether
+it is smoothed, + 0x402 two bits, + 0x404 and + 0x408 two depths as the depth
+buffer has them, 0 to 65535 with the near plane the greater, and + 0x40C a
+strength). What it is told: 0x1020 the first depth and 0x1022 the second (each
+held so that the first stays under the second), 0x1026 the strength in ten
+thousandths, 0x101E the first bit, 0x1024 the second, 0x1028 the smoothing,
+0x102A on or off, and the odd numbers before each read them back. The scope
+gives it the depth of the place 1100 further from the eye than the enemy
+(0x24770 with the camera's two planes, held to 0..65535 by 0x247C4), the depth
+of the place 100 further than the enemy, and 10000: all of its strength.
+
+Its table (0x197F4) is for the depth's upper eight bits: all ones under the
+first depth, nothing but opaque black from the second on, and between them the
+third part of the colour going evenly from one to nought (with the first bit set
+the other way about: black, rising, all ones). Each frame it is on (its task's
+message 4) the depth buffer is drawn through that table into a picture of 256
+by 128, the screen in four strips of 120 across brought to 64 each; the screen's
+own picture is drawn into the same small picture; and that is drawn back over
+the whole screen, four strips of 64 brought to 120, blended by its own alpha
+and by the strength. So what is nearer than the second depth is left as it is,
+what is further than the first is the picture made small and large again, and
+between them the two are mixed: in the scope everything more than 1100 behind
+the enemy is blurred and the enemy sharp. (Which part of the table's colour
+ends as the alpha that mixes them has not been followed through the PSP's
+graphics calls; the second bit draws something else, not read.) A map's script
+has it too, `s232(what, value)` with 0 to 6 for making it and for the same
+things (0xC19F8), and no script of the game calls that; only the scope uses it.
+
+Not ported: the port's pictures of the scene have no depth to read afterwards,
+so this wants a pass of its own. Until then the two snipes' backdrops are sharp
+where the PSP's are soft.
 
 The sight is the display's snipe part (0x41E18): a layout of its own, the
 battle pack's files 7 to 9 (`if_btlsys.lpk/007.sdoa`) with file 10 for its one
@@ -2479,14 +2518,11 @@ that strike outright, the two blades, the three that fire a volley, the two
 that throw a bomb and the two snipes have only been run in the port
 (`docs/compare/skills_that_strike.png`, `skill_blades.png`, `skill_volleys.png`,
 `skill_star_comet.png`, `skill_snipes.png`): where the walkthrough uses them
-has not been looked for. Every skill of her slots is ported. Not ported: the
-enemies' marks while she has the stage and some of them are shown again (the
-port draws none then), the depth figures of the scope's camera, Six Pocket of
-her skills that act of themselves, and
-the scenes' effects (`.efp`: 10120 and 10121 for
-Defender's shape, 10170 and 10171 for Skill Boost's, 10001 and 10003 for Charge
-Shot with 10004 for its bullet, 10011 to 10013 for Burst Shot): a plain ball
-stands in for a bullet's.
+has not been looked for. Every skill of her slots is ported, with its scene's
+effects ("The effects of her skills' scenes"), the enemies' marks while she has
+the stage (an enemy a moment of hers shows again has its mark again) and Six
+Pocket of those that act of themselves. Not ported: the scope's blur of what is
+behind the enemy ("The filter that blurs by depth").
 
 ## How a battle begins and ends
 
@@ -2566,10 +2602,32 @@ battle's that is the only one to draw while the effect plays, so that it is draw
 over nothing, and the canvas laying what it drew over the picture
 (`Canvas::scene_here`).
 
-Not ported: the way the picture is drawn while the effect plays, for the record's
-third word (0x11AF48: not by the fade's own drawing, 0x298DC, but as a strip of
-triangles over the whole screen from the picture kept, laid over what is there by
-the picture's own alpha).
+**How the picture stands under it.** For the second record (its third word) the
+picture is not drawn by the fade (0x298DC) but by the encounter itself
+(0x11AF48), each frame it stands: the picture kept, over the whole screen, as a
+strip of eight pieces 60 across (nineteen corners at 0x172C40: nothing but the
+screen cut into strips, each corner's place the same as its place in the
+picture). It comes out as it was kept. Measured in the walkthrough pixel by
+pixel (each bright pixel of the frame at 4211.35 s against the same pixel
+later, and the middle of all those shares taken, so that the lines over it do
+not count): 0.09 at 4212.05, 0.30 at 4212.12, 0.36 at 4212.18 and then 0.37
+without a change to 4212.95. That 0.37 is the effect's own: its second emitter
+is a black sheet over all the screen that comes to 160 of 255 in five frames
+and stays for seventy-five (`tools_re/esb.py` on the effect's file), which
+leaves 95 parts in 255 of what is under it; the first is the white sheet it
+begins with, gone to black by its fifteenth frame and off by its twentieth
+(the walkthrough at 4211.5 to 4212.2 s). So the picture under them is whole.
+
+(The routine sets an ambient colour with an alpha of 0x80 and a material of
+0xFF333333 before it draws, 0x11B008 and 0x11B014, which read as if the picture
+were laid on at half its strength over a screen nobody had cleared; on
+2026-10-13 the port was made to do that, with each frame over the frame two
+before it, and came out at 0.23 where the walkthrough has 0.37. Whatever those
+two colours are for, they do not reach the picture. It was taken out again.)
+
+In the port the fade's picture is drawn whole and the effect's picture laid
+over it (`draw_fade` in `battle/mod.rs`), which is the same: 0.37 of the
+picture in the port's frames too (`tools_re/out/_ratio.py`).
 
 The stage (`BtStageActor`, 0xA0484, update 0xA05F0) counts the enemies each frame:
 those in the list that are not being removed, not dying and not dead (0xA0BFC), plus

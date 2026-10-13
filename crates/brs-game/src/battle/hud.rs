@@ -918,8 +918,9 @@ fn draw(
     }
     // The enemies' marks, where the camera has them on the PSP's screen (0x3EED8);
     // one that is not before the camera is not drawn, and while she has the stage
-    // none is, as the enemies are not (0x9107C).
-    for mark in horde.marks.iter().filter(|_| !player.staged) {
+    // none is but those of the enemies a moment of hers has seen again, as the
+    // enemies themselves are (0x9107C).
+    for mark in horde.marks.iter().filter(|mark| !horde.out_of_sight(mark.enemy)) {
         if let Some(at) = aim.view.project(mark.at, aspect) {
             hud.draw_mark(&mut canvas, &shown.marks, at, mark);
         }
@@ -1033,7 +1034,7 @@ mod tests {
         };
         let drawn = |at: Vec2, share: f32, level: i32, second_life: bool| {
             let mut canvas = Canvas::default();
-            let mark = MarkAt { at: Vec3::ZERO, share, level, second_life, icons: Vec::new() };
+            let mark = MarkAt { enemy: Entity::PLACEHOLDER, at: Vec3::ZERO, share, level, second_life, icons: Vec::new() };
             hud.draw_mark(&mut canvas, &Player::at(&hud.signs, MARK_SET, 60.0), at, &mark);
             canvas.vertices().to_vec()
         };
@@ -1094,7 +1095,7 @@ mod tests {
         // left of the bar and each one before it sixteen further to the right.
         let enemys = |at: Vec2, icons: &[usize]| {
             let mut canvas = Canvas::default();
-            let mark = MarkAt { at: Vec3::ZERO, share: 1.0, level: 2, second_life: false, icons: icons.to_vec() };
+            let mark = MarkAt { enemy: Entity::PLACEHOLDER, at: Vec3::ZERO, share: 1.0, level: 2, second_life: false, icons: icons.to_vec() };
             hud.draw_mark(&mut canvas, &Player::at(&hud.signs, MARK_SET, 60.0), at, &mark);
             canvas.vertices().to_vec()
         };

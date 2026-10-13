@@ -274,8 +274,13 @@ In the port: `Scene::reach_characters` (from `reach_characters` in
 does not think (`Brains::update`), does not idle and has no time
 (`Character::time`), so its animation, its tails and its effect stand; one
 unseen is not drawn (`Character::drawn`), nor its shadow or its effect. The
-port takes an effect and a thing of the map's own for the kinds 0x1063B8 does
-not ask, which has not been read out of the code that makes them.
+kinds 0x1063B8 does not ask are all but one: the character's + 0x78 is the
+resource it is made of, whose first word is its kind (0x105B1C), and only kind
+0, a character of the field's list, is asked. A thing of the map's own is of
+kind 4 and an effect of the kinds effects are loaded as (5 for an event's), so
+neither is, which is how the port has it (`Scene::sight_characters`); a
+character made of no resource would be asked from where it stands and not from
+a hundred over it, and has nothing to draw.
 
 **Where a character is put** (0x10925C, each frame, into the matrix at its + 0x120).
 Its place is at + 0xA0, its three turns in radians at + 0x90 and its three scales
@@ -1148,19 +1153,22 @@ goes through the traps; `field/mod.rs` has the view by kind (`sight`), the frame
 (`spin_camera`) and the drawing between frames (`follow_camera`);
 `Lag::kept_behind` is 0xDF6D4 and `Lag::step` ends with 0xD9B14; the counts are
 put back to nought when a camera is taken up again or is a new one
-(`Camera::renewed`, `Lag::renew`). Not ported: what field flag 0x50 does to the
-view (0xDD0EC, in the frame of a camera that follows her): while there is
-something she guards (0x1179D8: the character the field's + 0xE64 names) a
-count at the camera's + 0xC80 goes up to 30 a frame at a time with the flag set
-and down to nought without it, and by its share of 30 the view is turned from
-her towards a point 100 over what she guards. Nothing in the executable sets
-the flag by its number (no call of 0x1176FC with 0x50) and the system script
-has no 80 in it, so what sets it is not found. (Read again on 2026-10-09:
-0x1179D8 gives the character the field's + 0xE64 names, and that is nought
-from when the field is made, 0x1181EC: her own number. What she guards is the
-field's + 0xE68, which 0x1179F4 gives, and only 0x10D370 asks. So "what she
-guards" in this paragraph is she herself, and what the view is turned from was
-misread: it is to be read again before anything is made of it.)
+(`Camera::renewed`, `Lag::renew`).
+
+Left out, there being nothing to it: what field flag 0x50 does to the view
+(0xDD0EC, in the frame of a camera that follows her). With her there (0x1179D8:
+the character the field's + 0xE64 names, which is nought from when the field is
+made, her own number) a count at the camera's + 0xC80 goes up to 30 a frame at
+a time while the flag is set and down to nought while it is not. With `s` its
+share of 30 and `k = 1 - (1 - s)^2`, the eye goes `k` of the way from where it
+is to the point on the line from a hundred over her through the eye that is a
+third as far from there as the eye is and 200 more (0xDD20C), and the view is
+turned `k` of the way (0xDD3C0) to one that looks at a hundred over her from
+there: the camera would come in on her and look straight at her. At nought it
+is the view as it was. Nothing sets the flag: every call of 0x1176FC has its number written in
+it but the one in 0xE6208, whose callers give it 0x54 (`s96(40)`), the four of
+`s104` and 0x5A and 0x5B (0xE6650); none is 0x50, and the system script has no
+80 in it. So the count is always nought and the view never changes by this.
 
 **The view the stick goes by** (the camera's + 0x50; 0x101700 takes the stick's
 way through its inverse, and 0x1017C0 lays that on the ground she is on). The
@@ -1695,7 +1703,44 @@ failed"), and so is the place's name (see "The sign that names a place"). The
 display, the place's name and the gauge are left out under either window and
 while the field is being left. The sign of sets 6 to 14 is the sign of what a
 button would do, and the marks over characters are in "The marks over
-characters". Not ported: the states and flags the field is not free in.
+characters".
+
+**What the field is not free in**, flag by flag, and what the port has for each.
+While it is not free the field draws nothing of its world either (0x10E750: only
+the picture the screen's fade keeps, and that only under the MENU), so each of
+these is a screen that stands over a picture of the field:
+
+| Flag | Set by | What it is | In the port |
+| --- | --- | --- | --- |
+| 0 | 0xEFA60, with the field's mode put at 2 | the field has been told to end | `Scene::leaving`: the display is left out |
+| 0x12 | the encounter | a battle | another mode of the game |
+| 0x1B | 0xF19B8 (and cleared in 0xF1BC4's state 3) | the MENU is up | `menu/`: nothing of the field has a frame or is drawn |
+| 0x1E | nothing: no routine sets it by number | | |
+| 0x2C | 0xE68AC | a film | `film.rs`, over everything |
+| 0x34 (with 0xA) | 0xE6964, from the pause (0x10CEE8) and the map of the stage (0xF3400) | the field stands still under one of the two | `Paused`, `MapScreen`: the field has no frame |
+| 0x39 | 0x1112E4 | the list of saves is up (0x1113CC draws it) | `save_screen.rs` |
+| 0x3D | 0x10CEE8 | the pause is up (0x10CC3C draws it) | `pause.rs` |
+| 0x42 | 0x113898 | a window of the field's own at + 0x223C (0x1137DC draws it), of the title's kind or of the scripts' | nothing: its bit 1, which has it started (0x1139DC), is set nowhere |
+| (0xF347C) | the field's + 0x2230 | the map of the stage is up (0xF326C draws it) | `field/map_screen.rs` |
+| 0x56 without 0x17 | 0xEE760 | the window of a mission failed, once its picture is taken | `field/failed.rs` |
+| mode 3 without 0x17 | 0x115E88 | a map is being left, once its picture is taken | `Scene::map_change` |
+
+The picture each of them stands over is taken where the field's flag 0x17 is
+found set, and the field's + 0x1E34 says where that is: with nought as the
+field's own display is about to be drawn (0x10F358: the world and the marks over
+characters, nothing else), with 1 in the last of the field's tasks (0x10EA18:
+all that is on the screen). The MENU (0xF18F8), a map being left (0x115E88) and
+a script's picture of the scene alone (0xE4790: `s145`, and `s172` and `s223`
+with 0) have nought; the pause (0x10CE64), the map of the stage (0xF3388), the
+list of saves (0x11148C), the window of a mission failed (0xEE760), a battle
+beginning (0xD876C) and a script's picture of all the screen (0xE47C0: `s172`
+and `s223` with 1) have 1. So under the pause and the like the gauge and the mission's display stand
+as they were, which is what a scene that stands still with them drawn comes to
+(the port's way), and while a map is left they go on being drawn over the
+picture of the street (the field's mode 3: the picture, then the display, the
+sign, the place's name and the gauge, 0x10F134), which the port does too:
+`interface_shown` does not ask whether a map is being left. Nothing is left to
+port of this.
 
 ## The windows a script puts up
 
@@ -1760,7 +1805,7 @@ by 255 over the frames each frame):
 | 4, 8 | a black sheet comes off from half (128), goes over as far as half |
 | 0x100, 0x200 | the sheet comes off, goes over, in the screen's rows, each at a pace of its own (a random 0 to 31 and twice 480 over the frames): the title leaves by it, and the port has it there (`title/rows.rs`; see `TITLE_NOTES.md`), not as a kind of the field's fade |
 | 0x400 | only kept as the kind |
-| 0x800, with 0x1000 to 0x5000 | the picture kept is drawn moved about (its middle, scales and angle from + 0x30 on); not read further, not ported |
+| 0x800, with 0x1000 to 0x5000 | the picture kept is drawn moved about (its middle, scales and angle from + 0x30 on); not read further, and never asked for: of every start of a fade in the executable (0x297E4) the kinds are 1, 2, 4, 0x11, 0x12, 0x803 and 0x804 |
 | 0x803 | the picture kept goes: there is less and less of it (0x2C244) |
 | 0x804 | the picture kept stays, and darkens unless it was put up to be shown whole (0x2C258) |
 
@@ -1953,8 +1998,8 @@ save, load and delete (0x5330, 0x5804, 0x5F28: the game's picture goes to
 half behind the PSP's own dialog, where the port has its list's own sheet) and
 by 0x6EF70, and its rows (0x100, 0x200) only by the title, which has them. Still
 to do: the port's windows have their frame before the script's, where the
-original's tasks have theirs after it (a frame's difference at the most), and
-the fade's kind 0x800, which nothing starts by a plain number.
+original's tasks have theirs after it (a frame's difference at the most). The fade's kind 0x800 with a
+move is never started (see the table of kinds).
 `--skip-messages`, and holding start, take every window as
 read and a question as answered with what its cursor starts on.
 

@@ -2189,7 +2189,7 @@ fn notice_touches(
 /// A frame of the characters' faces, which go by what the scene has spoken: that
 /// it has begun to be heard is kept from when the sound begins it until a script
 /// hushes it.
-fn step_faces(mixer: Res<crate::sound::Mixer>, tables: Res<FieldTables>, mut state: ResMut<FieldState>) {
+fn step_faces(mixer: Res<crate::sound::Mixer>, tables: Res<FieldTables>, mut state: ResMut<FieldState>, mut moving: Local<BTreeMap<i32, u32>>) {
     let scene = &mut state.scene;
     // And whether the tune a script asked for is playing yet (`s177`).
     if !scene.tune_heard {
@@ -2200,9 +2200,18 @@ fn step_faces(mixer: Res<crate::sound::Mixer>, tables: Res<FieldTables>, mut sta
         scene.voice_begun = true;
     }
     let (begun, heard) = (scene.voice_begun, said.is_some());
-    for character in scene.characters.values_mut() {
+    for (&id, character) in scene.characters.iter_mut() {
         if character.face.used {
             character.step_face(begun, heard);
+        }
+        // How long each mouth moved, for whoever is looking into one that did not.
+        if character.face.speaking() {
+            if !moving.contains_key(&id) {
+                debug!("the mouth of character {id} begins to move (a voice begun: {begun}, one heard now: {heard})");
+            }
+            *moving.entry(id).or_default() += 1;
+        } else if let Some(frames) = moving.remove(&id) {
+            debug!("the mouth of character {id} moved for {frames} frames (a voice begun: {begun}, one heard now: {heard}, the stream: {said:?})");
         }
         // And of their necks, by the time each has of the frame (0xFEA30).
         let time = character.time();

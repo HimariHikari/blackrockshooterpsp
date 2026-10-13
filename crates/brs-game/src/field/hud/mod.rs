@@ -519,10 +519,13 @@ fn draw_captions(
 const INTERFACE_OFF: i32 = 6167;
 
 /// Whether the mission's display and her gauge are drawn at all (0x10F0F8 draws
-/// them while the field is not held up by something of its own, as it is by the
-/// window of a mission failed: its flag 0x56). The window of a mission cleared
-/// and the leaving of the field, which are not the original's yet, stand
-/// without them.
+/// them while the field is free, 0x10E554: not held up by something of its own,
+/// as it is by the window of a mission failed, its flag 0x56, and by having been
+/// told to end, its flag 0). The other things it is not free under are screens
+/// that stand over a picture of it, which here is the field standing still, and
+/// while a map is left it draws them all the same (its mode 3). The window of a
+/// mission cleared stands without them by the save's flag in the original, which
+/// its scripts set first.
 fn interface_shown(scene: &super::scene::Scene, progress: &Progress) -> bool {
     scene.cleared.is_none() && scene.failed.is_none() && scene.leaving.is_none() && !progress.flag(INTERFACE_OFF)
 }

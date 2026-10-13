@@ -72,15 +72,28 @@ Last brought up to date: 9 October 2026.
       game's step and poses ahead of it. The world is now drawn where each of
       the game's thirty steps a second leaves it, as the PSP draws it, at any
       display rate. (Measured in bursts of pictures; to be confirmed in play.)
-- [ ] A tail of hers lashing across the screen just after a cut
-      (`docs/compare/tail_lash_after_cut_port.png`, about 126 s into the
-      opening story). Her tails are chains kept in the world, and a script
-      that puts her somewhere else leaves them behind for a moment. The
-      original's code has nothing that puts them back either, so what it shows
-      there has to be looked at in the walkthrough before this is changed.
-- [ ] Mouths that sometimes do not move while someone speaks: not yet seen in
-      my own runs; to be looked for with the voices playing.
+- [x] A big dark shape sweeping across the screen about two minutes into the
+      opening story (`docs/compare/tail_lash_after_cut_port.png`): looked
+      into, and no fault. It is her cannon coming down past the camera as she
+      lowers it; the scene's script starts that shot with the camera seeing
+      from ten units on, for just that. Her tails are switched off for the
+      whole of that scene and follow its own animation. (Still worth a look
+      beside the walkthrough.)
+- [ ] Mouths that sometimes do not move while someone speaks: looked for in
+      the first mission's opening, played unattended with the voices on
+      (silently) and X pressed every five seconds, and not found. Both kinds
+      of mouth work there: the ones a scene's own animation moves (the man
+      who shouts "Wake her up, dammit!", his jaw open on the same frames as
+      in the walkthrough at 226 s) and the ones the script moves with the
+      voice (hers on "...Okay.", the others' in the scene after; each stops
+      when its voice ends). Still open: which scene or line it was seen in.
 - [ ] "Model bits bugging out" other than the tails: nothing else found yet.
+- [x] Found while looking (not reported): a picture of the screen that the
+      game keeps (for a map's dissolve, a battle's beginning, a scene's cut)
+      could go on being drawn from an older one once the window had changed
+      size, as when going to full screen. What draws it is now made anew each
+      time a picture comes. (Not tried with a real window: to be confirmed in
+      play.)
 
 ## Still to do
 
@@ -90,8 +103,17 @@ Last brought up to date: 9 October 2026.
 - [ ] The "mazuma" missions' counter (the system script's own; not looked at in play)
 
 ### Remarks in the notes still marked "not ported", to be sorted one by one
-- [ ] The states and flags the field is not free in
-- [ ] A picture kept and drawn moved about (picture kind 0x800)
+- [x] The states and flags the field is not free in: read one by one (the
+      MENU, the pause, the map of the stage, the list of saves, a film, a
+      battle, a mission failed, a map being left, the field told to end; two
+      that nothing ever sets). Each is a screen over a picture of the field,
+      which the port has by the field standing still, with the display in the
+      picture or out of it as the original takes it. Nothing left to port
+      (`FIELD_NOTES.md`, "What the field is not free in")
+- [x] A picture kept and drawn moved about (the fade's kinds 0x800 with 0x1000
+      to 0x5000): every start of a fade in the executable was listed, and none
+      asks for one of them (the kinds asked for are 1, 2, 4, 0x11, 0x12, 0x803
+      and 0x804, a script's `s7` among them), so there is nothing to port
 - [x] Names of items from 500 on in a text; text code 0x1A: no text in the
       data uses either, the records' rewards have their words by another way,
       and the port warns if a script ever asks for such a name
@@ -108,20 +130,34 @@ Last brought up to date: 9 October 2026.
       leaves them unsaid for a light that lights anyone
 - [x] The order of drawing a script gives the effects of a scene (setting 123;
       tried, not yet compared with the walkthrough's opening)
-- [ ] Which model kinds are not asked how near the camera they are
+- [x] Which model kinds are not asked how near the camera they are: all but
+      the characters of the field's list (things of a map and effects are of
+      other kinds), as the port has it
 - [x] Battle: the sight of the skills that snipe and the log's lines: looked
       into, all in (the one line never written, "No longer Overheated.", the
       original never writes either)
-- [ ] Battle: the enemies' marks while she has the stage and some of them are
-      shown again; the depth figures of the scope's camera
-- [ ] Battle: an enemy's effects standing still in hit stop
-- [ ] Battle: the effect's show of a status effect given (its sound is in)
-- [ ] Battle: how the picture is drawn while the effect of a battle of note
-      plays (a strip of triangles from the picture kept, 0x11AF48)
+- [x] Battle: the enemies' marks while she has the stage: an enemy that a
+      moment of hers shows again has its mark again
+- [ ] Battle: the scope's blur of what is behind the enemy. Read: the
+      "depth figures" are a filter that blurs the picture by depth (sharp up
+      to 100 behind the enemy, wholly blurred from 1100 behind), which only
+      the two snipes use (`BATTLE_NOTES.md`, "The filter that blurs by
+      depth"). It wants a pass over the picture with its depth, which the
+      port does not have yet
+- [x] Battle: an enemy's effects standing still in hit stop: an enemy is
+      never put in hit stop (nothing sets it), so there is nothing to port
+- [x] Battle: what is shown as a status effect is given: it was in already
+- [x] Battle: how the picture is drawn while the effect of a battle of note
+      plays (0x11AF48): read, tried another way, and measured against the
+      walkthrough pixel by pixel. The picture stands whole under the effect's
+      own dark sheet (0.37 of it shows, there and in the port), as the port
+      had it all along; nothing to change
 - [ ] Battle: the sky's own near and far planes (no boss's script asks for them)
 - [ ] Menu: the sign of loading and the frozen picture (`MENU_NOTES.md`)
 - [ ] `FORMAT_NOTES.md`, "Not done"
-- [ ] What the field's flag 0x50 does to the camera (misread once; to be read again)
+- [x] What the field's flag 0x50 does to the camera: read again. It would have
+      the camera come in on her and look straight at her, but nothing in the game
+      ever sets the flag, so there is nothing to port
 
 ### To be compared with the walkthrough
 - [ ] The gauge's flash at a hit on her (a moment she is hit has to be found)

@@ -192,6 +192,8 @@ pub struct LockAt {
 /// status effects on it that are up, each by its icon.
 #[derive(Clone, Debug)]
 pub struct MarkAt {
+    /// Whose it is: it is drawn while that enemy is.
+    pub enemy: Entity,
     pub at: Vec3,
     pub share: f32,
     pub level: i32,
@@ -1688,7 +1690,7 @@ pub fn settle(
             let view = Seen { entities: &enemy.models, query: &models };
             if let Some(at) = body.place_of(slot, node, offset, &view).filter(|_| body.anchored()) {
                 let share = if body.max_hp > 0.0 { (body.hp / body.max_hp).clamp(0.0, 1.0) } else { 0.0 };
-                horde.marks.push(MarkAt { at, share, level: body.variant.level as i32, second_life: body.second_life() > 0, icons: body.status.icons() });
+                horde.marks.push(MarkAt { enemy: entity, at, share, level: body.variant.level as i32, second_life: body.second_life() > 0, icons: body.status.icons() });
             }
         }
         // The cursor passes over an enemy under either of two status effects

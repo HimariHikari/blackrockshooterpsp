@@ -94,9 +94,13 @@ pub fn swing(
             continue;
         }
         let time = character.time();
+        let before = (tails.status, tails.held, chains.off);
         tails.frame(character.status, time);
         (chains.weight, chains.held, chains.time) = (tails.weight, tails.held, time as f32);
         chains.off = character.flags.has(flag::NO_LAYERS);
+        if before != (tails.status, tails.held, chains.off) {
+            debug!("character {}'s chains: status {}, held {}, off {}, at {}", actor.id, tails.status, tails.held, chains.off, character.position);
+        }
     }
 }
 

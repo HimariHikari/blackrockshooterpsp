@@ -1093,6 +1093,11 @@ impl Face {
         self.blink_in = if self.blinks { frames as i16 } else { 0 };
     }
 
+    /// Whether its mouth is moving.
+    pub fn speaking(&self) -> bool {
+        self.speaks
+    }
+
     /// `s160` (0xFE620): its mouth moves, so much of a hundred; with nought it
     /// is still.
     pub fn speak(&mut self, amount: i32) {
@@ -3708,9 +3713,14 @@ impl Scene {
     /// too far from her to have their frame. It is asked before each one's frame.
     pub fn rest_characters(&mut self, frames_within: f32) {
         let her = self.player().map(|player| player.position).filter(|_| !self.flag(field_flag::ALL_NEAR));
-        for character in self.characters.values_mut() {
+        let in_event = self.event_running;
+        for (id, character) in self.characters.iter_mut() {
             let kept = character.flags.has(flag::ALWAYS_ACTIVE);
-            character.asleep = her.filter(|_| !kept).is_some_and(|her| character.position.distance(her) > frames_within);
+            let asleep = her.filter(|_| !kept).is_some_and(|her| character.position.distance(her) > frames_within);
+            if asleep && !character.asleep && in_event && !character.hidden() {
+                debug!("character {id} is out of her reach in an event: {} from her, at {}", her.map_or(0.0, |her| character.position.distance(her)), character.position);
+            }
+            character.asleep = asleep;
         }
     }
 

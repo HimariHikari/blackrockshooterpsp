@@ -455,6 +455,10 @@ pub struct Captured {
     picture: Handle<Image>,
     /// The frames one has been asked for and has not come.
     waited: Option<u32>,
+    /// Another has come since the canvas last drew: one of another size (the
+    /// first, or one taken after the window changed) is another picture to the
+    /// graphics card, and what draws it has to be made anew to draw from it.
+    renewed: bool,
 }
 
 /// The frames a picture is waited for before it is given up: it does not come if
@@ -510,6 +514,7 @@ fn keep(taken: On<ScreenshotCaptured>, mut images: ResMut<Assets<Image>>, mut ca
     if let Err(error) = images.insert(&captured.picture, kept) {
         warn!("a picture of the screen could not be kept: {error}");
     }
+    captured.renewed = true;
 }
 
 /// A picture that was asked for and has not come is given up after a while.
@@ -558,7 +563,7 @@ pub fn plugin(app: &mut App) {
 
     app.add_plugins((Material2dPlugin::<CanvasMaterial>::default(), Material2dPlugin::<SceneMaterial>::default()))
         .insert_resource(Screen { scene })
-        .insert_resource(Captured { picture, waited: None })
+        .insert_resource(Captured { picture, waited: None, renewed: false })
         .init_resource::<Seen>()
         .init_resource::<Canvas>()
         .init_resource::<Materials>()
@@ -701,7 +706,14 @@ fn draw(
     scene_materials: Res<SceneMaterials>,
     mut scene: Query<(&mut Transform, &mut MeshMaterial2d<SceneMaterial>), With<SceneShown>>,
     seen: Res<Seen>,
+    mut captured: ResMut<Captured>,
 ) {
+    // What drew the picture kept before another came is done with.
+    if captured.renewed {
+        captured.renewed = false;
+        let picture = captured.picture.id();
+        materials.0.retain(|&(texture, _, _), _| texture != Some(picture));
+    }
     // Beside the game's screen, and above and below it, there is nothing: black
     // over whatever was drawn there.
     let (all, screen) = (seen.0, Rect::new(0.0, 0.0, WIDTH, HEIGHT));
