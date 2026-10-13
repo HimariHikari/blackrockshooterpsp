@@ -20,6 +20,17 @@ pub const STEPS_PER_SECOND: f64 = 30.0;
 /// The original measures time in sixtieths of a second, so one logic step is two.
 pub const SIXTIETHS_PER_STEP: f32 = (60.0 / STEPS_PER_SECOND) as f32;
 
+/// Has a frame that took long count for one step and no more. A frame takes
+/// long when a scene is read from the disc, or when the graphics card makes
+/// ready for something it draws for the first time; left to itself the game
+/// would then run every step the long frame was worth at once (up to a quarter
+/// of a second of them), and all that moves would be seen to skip ahead. As it
+/// is the game goes on from where it was, the way the PSP slows when it has
+/// much to do.
+pub fn no_catching_up(mut time: ResMut<Time<Virtual>>) {
+    time.set_max_delta(std::time::Duration::from_secs_f64(1.0 / STEPS_PER_SECOND));
+}
+
 /// Where game logic has put an entity. Logic moves `current` once per step, and
 /// the entity's [`Transform`] is that; where it was a step before is kept for
 /// whoever asks how it moved.

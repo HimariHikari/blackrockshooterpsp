@@ -11,7 +11,7 @@
 //!         [--flags <flags>] [--variables <variable>:<value>,...]
 //!         [--saves <folder>] [--script <steps>]
 //!         [--screenshot <png>] [--screenshot-at <seconds>] [--background] [--window]
-//!         [--mute]
+//!         [--size <across>x<down>] [--mute]
 //!         [--slow <seconds>:<times>] [--verbose]`
 //!
 //! By default the game begins as the original does, on its title: the maker's
@@ -96,6 +96,8 @@
 //! is used for something else, and puts no sound out. `--background` does the same
 //! for a run that saves nothing. `--window` has such a run open its window after
 //! all, for checking what only a window shows (what a change of its size does).
+//! `--size 1920x1200` has the window, or the picture drawn to in its stead, that
+//! many pixels across and down, for a look at another shape of screen.
 //! `--slow 42:8` has time go eight times slower from 42 seconds in, so that every
 //! frame of the game's logic after that is drawn at least once whatever the machine
 //! is busy with: frames saved a thirtieth of a second apart are then one after
@@ -217,6 +219,8 @@ struct Args {
     /// Show the window even in a run that saves its pictures: for what only a
     /// window shows.
     window: bool,
+    /// How many pixels the window is across and down.
+    size: (u32, u32),
     /// The sound is played as silence.
     mute: bool,
     verbose: bool,
@@ -281,7 +285,7 @@ fn main() -> Result<()> {
     let mut app = App::new();
     let window = Window {
         title: "Black Rock Shooter: The Game".into(),
-        resolution: WindowResolution::new(1280, 720),
+        resolution: WindowResolution::new(args.size.0, args.size.1),
         ..default()
     };
     // A run that saves its pictures and exits has nobody watching it.
@@ -429,6 +433,7 @@ fn parse_args() -> Result<Args> {
         slow: None,
         background: false,
         window: false,
+        size: (1280, 720),
         mute: false,
         verbose: false,
     };
@@ -528,6 +533,12 @@ fn parse_args() -> Result<Args> {
             }
             "--background" => args.background = true,
             "--window" => args.window = true,
+            "--size" => {
+                let given = value()?;
+                let (across, down) = given.split_once('x').context("--size takes pixels across and down, as 1920x1200")?;
+                args.size = (across.parse().context("--size takes whole numbers")?, down.parse().context("--size takes whole numbers")?);
+                anyhow::ensure!(args.size.0 >= 64 && args.size.1 >= 64, "--size takes at least 64 pixels each way");
+            }
             "--mute" => args.mute = true,
             "--verbose" => args.verbose = true,
             _ => bail!("unknown option {arg}; see the top of crates/brs-game/src/main.rs for usage"),

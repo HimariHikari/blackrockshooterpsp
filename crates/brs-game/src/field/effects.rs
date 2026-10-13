@@ -445,6 +445,10 @@ fn of_characters(
         // The character is there when its effect is over, until a script takes
         // it away.
         playing.stays = true;
+        // The frame it is made in is a frame of it already: its character has its
+        // frame after the script that made it (0x102FD4), so a scene's smoke is
+        // there with the first frame of its shot.
+        playing.give(SIXTIETHS_PER_STEP * character.pace_fraction());
         commands.spawn((OfCharacter { id, file: effect.file.clone(), begun: effect.begun }, playing, ChildOf(*root)));
     }
     effects.of_characters.retain(|file, _| scene.characters.values().any(|character| character.effect.as_ref().is_some_and(|effect| effect.file == *file)));

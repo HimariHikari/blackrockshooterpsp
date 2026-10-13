@@ -47,6 +47,7 @@ impl Plugin for EnginePlugin {
         map::plugin(app);
         if self.stepped {
             app.insert_resource(Time::<Fixed>::from_hz(step::STEPS_PER_SECOND))
+                .add_systems(Startup, step::no_catching_up)
                 .add_systems(FixedFirst, step::remember)
                 .add_systems(FixedUpdate, (animation::advance, chain::swing).chain().in_set(EngineSystems::Animate))
                 .add_systems(

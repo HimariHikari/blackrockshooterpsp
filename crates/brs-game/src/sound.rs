@@ -838,9 +838,13 @@ fn mix(
     mut sounds: ResMut<Assets<Pcm>>,
     mut voices: ResMut<Assets<Voice>>,
     sinks: Query<(), With<AudioSink>>,
-    time: Res<Time>,
+    (time, real): (Res<Time>, Res<Time<Real>>),
     mut heard: Local<usize>,
 ) {
+    // What is heard goes on as the clock on the wall does, whatever the game's own
+    // time makes of a frame that took long; a run nobody hears keeps the game's
+    // time, so that it comes out the same every time.
+    let passed = if mixer.out == Out::On { real.delta_secs() } else { time.delta_secs() };
     for request in board.requests.drain(..) {
         mixer.carry_out(request);
     }
@@ -852,7 +856,7 @@ fn mix(
         let settings = PlaybackSettings { mode: PlaybackMode::Despawn, muted, ..PlaybackSettings::ONCE };
         commands.spawn((AudioPlayer(voices.add(Voice::new(pcm, gains))), settings)).id()
     };
-    mixer.step(time.delta_secs(), &mut sounds, &mut play, &mut |entity| stopped.push(entity));
+    mixer.step(passed, &mut sounds, &mut play, &mut |entity| stopped.push(entity));
     for entity in stopped {
         commands.entity(entity).try_despawn();
     }
@@ -868,6 +872,44 @@ mod tests {
 
     const DATA: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../game/unpacked");
     const FULL: Volumes = Volumes { music: 1.0, effects: 1.0, voices: 1.0 };
+
+    /// Every recording the game has can be heard: its own file is read and the
+    /// sound beside it decoded. (One that could not be would be over at once,
+    /// and a mouth that waits for its voice with it.)
+    #[test]
+    #[ignore = "decodes every recording of the game, which takes minutes"]
+    fn every_recording_can_be_played() {
+        let Ok(data) = GameData::new(DATA) else {
+            eprintln!("skipped: game data not unpacked");
+            return;
+        };
+        fn walk(folder: &Path, found: &mut Vec<std::path::PathBuf>) {
+            for entry in std::fs::read_dir(folder).into_iter().flatten().flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    walk(&path, found);
+                } else if path.extension().is_some_and(|extension| extension == "riff") {
+                    found.push(path);
+                }
+            }
+        }
+        let root = Path::new(DATA).canonicalize().unwrap();
+        let mut found = Vec::new();
+        walk(&root, &mut found);
+        if !found.iter().any(|path| path.with_extension("ogg").exists()) {
+            eprintln!("skipped: the recordings have not been converted");
+            return;
+        }
+        let mut failed = Vec::new();
+        for path in &found {
+            let file = path.strip_prefix(&root).unwrap().to_string_lossy().replace('\\', "/");
+            if let Err(error) = decode(&data, &Source::Recording(file.clone())) {
+                failed.push(format!("{file}: {error:#}"));
+            }
+        }
+        assert!(failed.is_empty(), "{} of {} recordings cannot be played:\n{}", failed.len(), found.len(), failed.join("\n"));
+        eprintln!("{} recordings decoded", found.len());
+    }
     /// The bank of the sounds the field always has, and that of a map with a sound
     /// about it that loops, its first.
     const FIELD_BANK: &str = COMMON_BANK;

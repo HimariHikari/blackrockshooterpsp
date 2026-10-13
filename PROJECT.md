@@ -79,6 +79,31 @@ Last brought up to date: 9 October 2026.
       from ten units on, for just that. Her tails are switched off for the
       whole of that scene and follow its own animation. (Still worth a look
       beside the walkthrough.)
+- [x] Things coming a frame or more late the first time they are drawn (a
+      model as it first appears, the parts of a model drawn another way than
+      the rest, a scene's smoke at a cut): the graphics card was being made
+      ready for each new way of drawing behind the game's back, and until it
+      was, what is drawn that way was simply not there. Found with a check
+      that photographs every frame about each camera cut and looks for one
+      that does not belong, and settled against the walkthrough frame by
+      frame (the smoke of the opening's shot at 276.0 s is there on its first
+      frame; in the port it came on the second). Now the frame waits until
+      the card is ready, so everything is there on its first frame. This is
+      the likeliest cause of models and bits of models blinking on a real
+      PC, where it takes longer than here. (To be confirmed in play.)
+- [x] Everything skipping ahead after a hitch: when a frame took long (a
+      scene being read, the card made ready for something new) the game ran
+      all the steps the long frame was worth at once, up to a quarter of a
+      second of them, which is seen as animation jumping. Now a long frame
+      counts for one step and the game goes on from where it was, as the PSP
+      slows when it has much to do; a film's picture and what is heard keep
+      to the clock on the wall. (Cannot be seen in an unattended run, which
+      has no hitches: to be confirmed in play.)
+- [x] A scene's effect made by a script had no time in the frame it was made
+      (the original gives it one), so it was a frame behind its shot.
+- [x] The black beside the screen checked at other shapes of window (4:3,
+      16:10, 21:9; `--size` on the command line): every pixel beside the
+      screen is black, in a fade and in scenes.
 - [ ] Mouths that sometimes do not move while someone speaks: looked for in
       the first mission's opening, played unattended with the voices on
       (silently) and X pressed every five seconds, and not found. Both kinds
@@ -86,7 +111,13 @@ Last brought up to date: 9 October 2026.
       who shouts "Wake her up, dammit!", his jaw open on the same frames as
       in the walkthrough at 226 s) and the ones the script moves with the
       voice (hers on "...Okay.", the others' in the scene after; each stops
-      when its voice ends). Still open: which scene or line it was seen in.
+      when its voice ends). Checked over the whole game since: all 1,403
+      animations of the story's scenes drive the right nodes of their models
+      (`tools_re/motion_match.py`), all 3,383 recordings can be played (a
+      test decodes each), and every mouth a script moves has its voice asked
+      for in the same frame (7,548 of them). So no cause is known: it is
+      still open, and what would find it is the scene or the line it was
+      seen in.
 - [ ] "Model bits bugging out" other than the tails: nothing else found yet.
 - [x] Found while looking (not reported): a picture of the screen that the
       game keeps (for a map's dissolve, a battle's beginning, a scene's cut)

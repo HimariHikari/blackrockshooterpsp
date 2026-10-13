@@ -29,6 +29,14 @@ pub struct Offscreen(pub Handle<Image>);
 /// the program has nothing to put sound out with.
 pub fn plugins(window: Window, offscreen: bool, sound: bool) -> PluginGroupBuilder {
     let plugins = if sound { DefaultPlugins.build() } else { DefaultPlugins.build().disable::<AudioPlugin>() };
+    // What is drawn for the first time is drawn in that frame. Left to itself the
+    // graphics card is made ready for a new way of drawing behind the game's
+    // back, and until it is, whatever is drawn that way is not there: a model
+    // would be missing for a frame or more as it first comes, or the parts of it
+    // that are drawn another way than the rest, or a scene's smoke at a cut. The
+    // frame waits instead, and the game goes on from where it was
+    // ([`crate::step::no_catching_up`]).
+    let plugins = plugins.set(bevy::render::RenderPlugin { synchronous_pipeline_compilation: true, ..default() });
     if !offscreen {
         return plugins.set(WindowPlugin { primary_window: Some(window), ..default() });
     }

@@ -88,7 +88,9 @@ pub fn plugin(app: &mut App) {
 #[allow(clippy::too_many_arguments)]
 fn play(
     data: Res<GameData>,
-    time: Res<Time>,
+    // The film's sound is heard as the clock on the wall goes, whatever the game's
+    // own time does after a frame that took long: its picture keeps to that.
+    time: Res<Time<Real>>,
     paused: Res<Paused>,
     mixer: Res<Mixer>,
     mut board: ResMut<Board>,
