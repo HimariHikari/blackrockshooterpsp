@@ -2242,7 +2242,8 @@ added to the middle of every camera of the scene (0x8BEEC, 0xA30C8), which
 moves the picture the other way: what the cursor is on comes to the middle of
 the screen, where the sight is. It also sets three figures from the enemy's
 distance (0x19B68, 0x19BC8, 0x19C28), which are those of a filter over the
-picture: what is behind the enemy is blurred.
+picture that would blur what is behind the enemy; the filter is never made, so
+they go nowhere (below).
 
 **The filter that blurs by depth** ("Focus", the task `filterFocusEffectStart`
 makes: 0x19A1C, kept at the game's + 0x20040; its routine 0x1C23C, its object
@@ -2254,32 +2255,57 @@ held so that the first stays under the second), 0x1026 the strength in ten
 thousandths, 0x101E the first bit, 0x1024 the second, 0x1028 the smoothing,
 0x102A on or off, and the odd numbers before each read them back. The scope
 gives it the depth of the place 1100 further from the eye than the enemy
-(0x24770 with the camera's two planes, held to 0..65535 by 0x247C4), the depth
-of the place 100 further than the enemy, and 10000: all of its strength.
+(0x24770 with the near and far planes of the scene's draw list 1, held to
+0..65535 by 0x247C4), the depth of the place 100 further than the enemy, both
+distances times `a` (nothing is sent while `a` or the distance is 0), and
+10000: all of its strength.
 
 Its table (0x197F4) is for the depth's upper eight bits: all ones under the
 first depth, nothing but opaque black from the second on, and between them the
-third part of the colour going evenly from one to nought (with the first bit set
-the other way about: black, rising, all ones). Each frame it is on (its task's
-message 4) the depth buffer is drawn through that table into a picture of 256
-by 128, the screen in four strips of 120 across brought to 64 each; the screen's
-own picture is drawn into the same small picture; and that is drawn back over
-the whole screen, four strips of 64 brought to 120, blended by its own alpha
-and by the strength. So what is nearer than the second depth is left as it is,
-what is further than the first is the picture made small and large again, and
-between them the two are mixed: in the scope everything more than 1100 behind
-the enemy is blurred and the enemy sharp. (Which part of the table's colour
-ends as the alpha that mixes them has not been followed through the PSP's
-graphics calls; the second bit draws something else, not read.) A map's script
-has it too, `s232(what, value)` with 0 to 6 for making it and for the same
-things (0xC19F8), and no script of the game calls that; only the scope uses it.
+blue of the colour going evenly from one to nought (with the first bit set the
+other way about: black, rising, all ones). Each frame it is on (its task's
+message 4), by the PSP's graphics calls:
+
+1. the depth buffer is the texture (16 bits a point, through the table as its
+   palette: shift 8, mask 0xFF; smoothed) and is drawn into a picture of 256 by
+   128 taken as 5650, the screen in four strips of 120 by 272 brought to 64 by
+   128 each;
+2. with the alpha kept from being written (pixel mask 0xFF000000) the screen's
+   own picture is drawn into the same small picture, now taken as 4444: its
+   colours are the screen's at four bits each (dithered when the smoothing is
+   on), and its four bits of alpha are what the first step left there, the
+   upper four of the 5650 picture's blue: the table's ramp;
+3. the screen is drawn to again with the small picture as the texture (4444,
+   smoothed where it is made large, colour and alpha times the drawing
+   colour), four strips of 64 by 128 brought to 120 by 272, blended by its
+   alpha, the drawing colour white with the strength as its alpha.
+
+So what is nearer than the second depth is left as it is, what is further than
+the first is the picture made small and large again, and between them the two
+are mixed: `mix(frame, small picture, ramp x strength)`. In the scope
+everything more than 1100 behind the enemy would be blurred and the enemy
+sharp. (The second bit draws something else, not read.)
+
+**It is never made.** The three things the scope sets (0x19B68, 0x19BC8,
+0x19C28) each ask first whether the task is there (the game's + 0x20040) and
+do nothing when it is not. The only thing that makes it is 0x19A1C: it is the
+one place the routine 0x1C23C is named, and the only store to + 0x20040
+besides the two of 0x19AA0, which puts it away. The only call of 0x19A1C in
+the program is in a map script's function, `s232(what, value)` (0xC19F8: what
+= 0 makes it, 1 to 6 are the same settings), which is reached from the
+dispatcher alone (0xCB1C8; nothing points to it and nothing jumps or branches
+into either). And no script calls it. All 203 scripts of that kind in the data
+(the 88 maps' `10.bscr` and the 115 `.bms` of the battles; no file of another
+name begins as they do, and the program holds none) call 157 of the functions
+between them by the first kind of call and 108 by the second, and 232 is in
+neither (231 is called 1589 times, 234 257 times). So on the PSP the scope's
+picture is as sharp behind the enemy as in front of it: the filter was
+written, the scope was made to steer it, and nothing ever switches it on. One
+routine still looks for it to put it away (0x1194EC). There is nothing to
+port, and the port draws the two snipes' backdrops sharp as the PSP does.
 (The filter kept beside it, "Bloom", `filterBloomStart` at 0x19378, is made by
 `s233` alone, 0xC1AB0, which no script calls either: of the picture's filters
-the game uses the glare, `s153` and `s254`, and this one in the scope.)
-
-Not ported: the port's pictures of the scene have no depth to read afterwards,
-so this wants a pass of its own. Until then the two snipes' backdrops are sharp
-where the PSP's are soft.
+the game uses the glare, `s153` and `s254`, and no other.)
 
 The sight is the display's snipe part (0x41E18): a layout of its own, the
 battle pack's files 7 to 9 (`if_btlsys.lpk/007.sdoa`) with file 10 for its one
@@ -2524,8 +2550,9 @@ that throw a bomb and the two snipes have only been run in the port
 has not been looked for. Every skill of her slots is ported, with its scene's
 effects ("The effects of her skills' scenes"), the enemies' marks while she has
 the stage (an enemy a moment of hers shows again has its mark again) and Six
-Pocket of those that act of themselves. Not ported: the scope's blur of what is
-behind the enemy ("The filter that blurs by depth").
+Pocket of those that act of themselves. The scope has no blur of what is behind
+the enemy, in the port as on the PSP: the filter for it is never switched on
+("The filter that blurs by depth").
 
 ## How a battle begins and ends
 

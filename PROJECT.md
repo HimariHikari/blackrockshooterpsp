@@ -192,12 +192,13 @@ Last brought up to date: 9 October 2026.
       original never writes either)
 - [x] Battle: the enemies' marks while she has the stage: an enemy that a
       moment of hers shows again has its mark again
-- [ ] Battle: the scope's blur of what is behind the enemy. Read: the
-      "depth figures" are a filter that blurs the picture by depth (sharp up
-      to 100 behind the enemy, wholly blurred from 1100 behind), which only
-      the two snipes use (`BATTLE_NOTES.md`, "The filter that blurs by
-      depth"). It wants a pass over the picture with its depth, which the
-      port does not have yet
+- [x] Battle: the scope's blur of what is behind the enemy: read to the last
+      graphics call, and the PSP never shows it. The scope only sets the
+      figures of a filter that has to be made first, the one thing that makes
+      it is a script function (`s232`), and none of the game's 203 scripts
+      calls that; so the scope's picture is sharp on the PSP as in the port,
+      and there is nothing to port (`BATTLE_NOTES.md`, "The filter that blurs
+      by depth", has all of it should it ever be wanted as an extra)
 - [x] Battle: an enemy's effects standing still in hit stop: an enemy is
       never put in hit stop (nothing sets it), so there is nothing to port
 - [x] Battle: what is shown as a status effect is given: it was in already
