@@ -18,7 +18,7 @@ use std::collections::HashMap;
 
 use bevy::asset::{uuid_handle, RenderAssetUsages};
 use bevy::camera::visibility::{NoFrustumCulling, RenderLayers};
-use bevy::camera::{CompositingSpace, RenderTarget, ScalingMode};
+use bevy::camera::{CompositingSpace, RenderTarget, ScalingMode, Viewport};
 use bevy::mesh::MeshVertexBufferLayoutRef;
 use bevy::prelude::*;
 use bevy::render::render_resource::{
@@ -38,6 +38,9 @@ pub const HEIGHT: f32 = 272.0;
 
 /// The canvas's camera draws after those of the scenes.
 const CAMERA_ORDER: isize = 10;
+/// The layer of what is black beside the game's screen in a window of another
+/// shape: over everything.
+const BESIDE_LAYER: i32 = i32::MAX;
 /// The layer the canvas's meshes and its camera are on, alone: no other camera
 /// draws the canvas, and its own draws nothing else.
 const RENDER_LAYER: usize = 31;
@@ -607,7 +610,10 @@ fn aim(added: On<Add, Camera>, screen: Res<Screen>, offscreen: Option<Res<Offscr
 
 /// Keeps the scene's picture the size of the window, and what shows it the size of
 /// all the canvas's camera sees: the screen, and what is beside it or above and
-/// below it in a window of another shape.
+/// below it in a window of another shape. The scenes' cameras draw to the part of
+/// the picture that is the game's screen, so that they see what the PSP's screen
+/// showed whatever shape the window has.
+#[allow(clippy::too_many_arguments)]
 fn fit(
     windows: Query<&Window, With<PrimaryWindow>>,
     screen: Res<Screen>,
@@ -616,6 +622,7 @@ fn fit(
     mut all: ResMut<Seen>,
     scene_materials: Option<Res<SceneMaterials>>,
     mut materials: ResMut<Assets<SceneMaterial>>,
+    mut cameras: Query<(&mut Camera, &RenderTarget), Without<CanvasCamera>>,
 ) {
     if let Ok(window) = windows.single() {
         let size = Extent3d { width: window.physical_width().max(1), height: window.physical_height().max(1), depth_or_array_layers: 1 };
@@ -645,6 +652,20 @@ fn fit(
     for mut transform in &mut shown {
         if transform.scale.truncate() != seen {
             transform.scale = seen.extend(1.0);
+        }
+    }
+    // Every pixel the screen has any of: what is black beside the screen covers
+    // the rest, and the part of an edge's pixel that is beside it.
+    let whole = size.as_uvec2();
+    let its = Vec2::new(WIDTH, HEIGHT) * (size.x / WIDTH).min(size.y / HEIGHT);
+    let from = ((size - its) / 2.0).floor().max(Vec2::ZERO).as_uvec2().min(whole - UVec2::ONE);
+    let part = (((size + its) / 2.0).ceil().as_uvec2().min(whole) - from).max(UVec2::ONE);
+    for (mut camera, target) in &mut cameras {
+        if target.as_image() != Some(&screen.scene) {
+            continue;
+        }
+        if camera.viewport.as_ref().is_none_or(|viewport| viewport.physical_position != from || viewport.physical_size != part) {
+            camera.viewport = Some(Viewport { physical_position: from, physical_size: part, ..default() });
         }
     }
 }
@@ -679,7 +700,21 @@ fn draw(
     mut drawn: Query<(&Mesh2d, &mut MeshMaterial2d<CanvasMaterial>, &mut Visibility), With<Drawn>>,
     scene_materials: Res<SceneMaterials>,
     mut scene: Query<(&mut Transform, &mut MeshMaterial2d<SceneMaterial>), With<SceneShown>>,
+    seen: Res<Seen>,
 ) {
+    // Beside the game's screen, and above and below it, there is nothing: black
+    // over whatever was drawn there.
+    let (all, screen) = (seen.0, Rect::new(0.0, 0.0, WIDTH, HEIGHT));
+    for beside in [
+        Rect::new(all.min.x, all.min.y, screen.min.x, all.max.y),
+        Rect::new(screen.max.x, all.min.y, all.max.x, all.max.y),
+        Rect::new(screen.min.x, all.min.y, screen.max.x, screen.min.y),
+        Rect::new(screen.min.x, screen.max.y, screen.max.x, all.max.y),
+    ] {
+        if beside.width() > 0.0 && beside.height() > 0.0 {
+            canvas.fill(BESIDE_LAYER, beside, [0, 0, 0, 255]);
+        }
+    }
     let (batches, scene_place) = canvas.take();
     // The scene's picture: under everything, or between the batch before its place
     // and the one after.

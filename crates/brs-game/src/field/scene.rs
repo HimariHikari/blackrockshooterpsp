@@ -3698,16 +3698,33 @@ impl Scene {
     /// What is an effect or a thing of the map's own is not asked how near the
     /// camera it is: 0x1063B8 asks only a model of the first kind, and the port
     /// takes those two for other kinds.
+    #[cfg(test)]
     pub fn reach_characters(&mut self, eye: Vec3, frames_within: f32, drawn_within: f32, too_close: f32) {
+        self.rest_characters(frames_within);
+        self.sight_characters(eye, drawn_within, too_close);
+    }
+
+    /// The first of what [`Scene::reach_characters`] says: which characters are
+    /// too far from her to have their frame. It is asked before each one's frame.
+    pub fn rest_characters(&mut self, frames_within: f32) {
+        let her = self.player().map(|player| player.position).filter(|_| !self.flag(field_flag::ALL_NEAR));
+        for character in self.characters.values_mut() {
+            let kept = character.flags.has(flag::ALWAYS_ACTIVE);
+            character.asleep = her.filter(|_| !kept).is_some_and(|her| character.position.distance(her) > frames_within);
+        }
+    }
+
+    /// The rest of it: which characters are not drawn. It is asked as each is
+    /// drawn, so with the camera where the frame that is drawn has it, and with
+    /// what a script has said of all this in the same frame.
+    pub fn sight_characters(&mut self, eye: Vec3, drawn_within: f32, too_close: f32) {
         let her = self.player().map(|player| player.position).filter(|_| !self.flag(field_flag::ALL_NEAR));
         let too_close = (!self.flag(field_flag::ALL_IN_SIGHT)).then(|| self.too_close.unwrap_or(too_close));
         for character in self.characters.values_mut() {
             let kept = character.flags.has(flag::ALWAYS_ACTIVE);
-            let from_her = her.filter(|_| !kept).map(|her| character.position.distance(her));
             let model = character.effect.is_none() && character.chr >= 0;
             let by_the_eye = too_close.filter(|_| !kept && model).is_some_and(|least| (character.position + Vec3::Y * EYE_MEASURED_OVER).distance(eye) < least);
-            character.asleep = from_her.is_some_and(|far| far > frames_within);
-            character.unseen = by_the_eye || from_her.is_some_and(|far| far > drawn_within);
+            character.unseen = by_the_eye || her.filter(|_| !kept).is_some_and(|her| character.position.distance(her) > drawn_within);
         }
     }
 

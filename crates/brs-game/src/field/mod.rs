@@ -621,7 +621,7 @@ pub fn plugin(app: &mut App) {
         .add_systems(FixedUpdate, run_title.after(leave_field).before(change_map).run_if(in_state(Mode::Field)))
         .add_systems(FixedUpdate, (ask_saves, after_saves).chain().before(leave_field).before(run_title).before(run_script).run_if(in_state(Mode::Field)))
         .add_systems(FixedUpdate, (count_time, mark_cleared))
-        .add_systems(Update, (follow_camera, fog_of_the_map, draw_fade).run_if(in_state(Mode::Field)))
+        .add_systems(Update, ((follow_camera, sight_characters).chain(), fog_of_the_map, draw_fade).run_if(in_state(Mode::Field)))
         .add_systems(Update, (show_glare, open_gallery))
         .add_systems(Update, shadows::show.run_if(in_state(Mode::Field)))
         .add_systems(Update, end_the_map.run_if(in_state(Mode::Field)))
@@ -1958,11 +1958,34 @@ fn sought(scene: &Scene, wanted: Seek) -> Option<Vec3> {
     (way.length() > SEEK_REACH).then(|| way.normalize())
 }
 
-/// Which characters are out of her reach or of the camera's this frame.
-fn reach_characters(mut state: ResMut<FieldState>, tables: Res<FieldTables>, camera: Single<&Transform, With<FollowCamera>>) {
+/// Which characters are out of her reach this frame, and so have none.
+fn reach_characters(mut state: ResMut<FieldState>, tables: Res<FieldTables>) {
+    if let Ok(frames_within) = tables.tunables.u16(PRM_FRAMES_WITHIN) {
+        state.scene.rest_characters(f32::from(frames_within));
+    }
+}
+
+/// Which characters are not drawn: too far from her, or with the camera too near
+/// them. The original asks as it draws each (0x1067F8), so it is asked here once
+/// the camera is where the frame that is drawn has it, and what is found is
+/// shown at once: a character a cut's camera stood by a moment ago is there in
+/// the next shot's first frame, and one a close shot leaves is gone with it.
+fn sight_characters(
+    mut state: ResMut<FieldState>,
+    tables: Res<FieldTables>,
+    camera: Single<&Transform, With<FollowCamera>>,
+    mut actors: Query<(&Actor, &mut Visibility), Without<FollowCamera>>,
+) {
     let figure = |at: usize| tables.tunables.u16(at).ok().map(f32::from);
-    let (Some(frames_within), Some(drawn_within), Some(too_close)) = (figure(PRM_FRAMES_WITHIN), figure(PRM_DRAWN_WITHIN), figure(PRM_TOO_CLOSE)) else { return };
-    state.scene.reach_characters(camera.translation, frames_within, drawn_within, too_close);
+    let (Some(drawn_within), Some(too_close)) = (figure(PRM_DRAWN_WITHIN), figure(PRM_TOO_CLOSE)) else { return };
+    state.scene.sight_characters(camera.translation, drawn_within, too_close);
+    for (actor, mut visibility) in &mut actors {
+        let Some(character) = state.scene.characters.get(&actor.id) else { continue };
+        let wanted = if character.drawn() { Visibility::Inherited } else { Visibility::Hidden };
+        if *visibility != wanted {
+            *visibility = wanted;
+        }
+    }
 }
 
 /// A frame of every character: those a behaviour script runs think and are moved by
@@ -2963,7 +2986,6 @@ fn spin_camera(
 /// is between the two (0xDCEDC).
 fn follow_camera(
     time: Res<Time>,
-    fixed: Res<Time<Fixed>>,
     (look, shake): (Res<Look>, Res<effects::Shake>),
     world: Res<CollisionWorld>,
     paths: Res<CameraPaths>,
@@ -2988,9 +3010,9 @@ fn follow_camera(
         }
     };
     if let Some(cut) = &state.scene.cut {
-        // Between two steps of the game the cut is carried on by the part of a step
-        // that has passed, like everything else that moves.
-        let pose = cut.pose(fixed.overstep_fraction());
+        // The cut is where the game's last step has it, like everything else of
+        // the world (`brs_engine::step`).
+        let pose = cut.pose(0.0);
         *transform = pose.transform;
         look_through(pose.vertical_fov(SCREEN_ASPECT));
         return;
@@ -3013,10 +3035,9 @@ fn follow_camera(
     let lay = scene.player().map_or(Quat::IDENTITY, |player| player.lay);
     let Some(sight) = sight(&scene.camera, feet, lay, (follow.tilt, follow.zoom), &world, &paths) else { return };
     look_through(view_height(scene.camera.figure(figure::FIELD_OF_VIEW)));
-    let into = fixed.overstep_fraction();
     let (mut place, mut turn) = (sight.place, sight.turn);
     if let Some(target) = sight.target {
-        place += follow.behind[0].lerp(follow.behind[1], into);
+        place += follow.behind[1];
         if place.distance(target) >= CAMERA_LOOK_FROM {
             turn = Transform::from_translation(place).looking_at(target, lay * Vec3::Y).rotation;
         }
@@ -3024,7 +3045,7 @@ fn follow_camera(
     place += turn * scene.camera.figures(figure::SHIFT);
     if let Some(blend) = &mut scene.camera.blend {
         let from = *blend.from.get_or_insert((transform.translation, transform.rotation));
-        let part = blend.part(into);
+        let part = blend.part(0.0);
         (place, turn) = (from.0.lerp(place, part), from.1.slerp(turn, part));
     }
     // What it is shaken by turns it in its own frame, last of all (0xDD848).
@@ -3046,7 +3067,7 @@ fn draw_fade(state: Res<FieldState>, captured: Res<Captured>, seen: Res<Seen>, m
     let alpha = (fade.level.clamp(0.0, 1.0) * 255.0) as u8;
     if !chosen && alpha != 0 {
         let shade = if fade.white { 255 } else { 0 };
-        canvas.fill(layer::FADE, hud::SCREEN, [shade, shade, shade, alpha]);
+        canvas.fill(layer::FADE, seen.0, [shade, shade, shade, alpha]);
     }
 }
 

@@ -693,20 +693,17 @@ pub fn pose(animators: Query<(&Animator, &Skeleton)>, mut transforms: Query<&mut
     }
 }
 
-/// Like [`pose`], for games whose logic runs in fixed steps: carries each animation on
-/// by the part of a step that has passed since the last one, so that motion is smooth
-/// at any display rate.
+/// Like [`pose`], for games whose logic runs in fixed steps: each model is drawn in
+/// the pose its last step left it in, as its place is (`crate::step`).
 pub fn pose_between_steps(
-    fixed: Res<Time<Fixed>>,
     animators: Query<(&Animator, &Skeleton)>,
     mut transforms: Query<&mut Transform>,
 ) {
-    let overstep = fixed.overstep().as_secs_f32();
     for (animator, skeleton) in &animators {
         if animator.pose.is_empty() {
             continue;
         }
-        let pose = animator.transforms(skeleton, &animator.locals(skeleton, animator.frames_in(overstep)), fixed.overstep_fraction());
+        let pose = animator.transforms(skeleton, &animator.pose, 1.0);
         for (&entity, pose) in skeleton.nodes.iter().zip(&pose) {
             if let Ok(mut transform) = transforms.get_mut(entity) {
                 *transform = *pose;

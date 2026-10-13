@@ -1,9 +1,16 @@
-//! Fixed logic steps, and smoothing between them.
+//! Fixed logic steps, and what is drawn of them.
 //!
 //! The original advances its field and battle logic 30 times a second (its menus run
-//! at 60), with speeds, timers and animation lengths all counted against that. The
-//! port keeps the logic on the same fixed steps, so it behaves the same at any display
-//! rate, and blends what the logic moves between one step and the next for display.
+//! at 60), with speeds, timers and animation lengths all counted against that, and
+//! draws a frame for each step. The port keeps the logic on the same fixed steps, so
+//! it behaves the same at any display rate, and draws what the logic moves where the
+//! last step left it: thirty pictures of the world a second, as on the PSP, however
+//! often the window is drawn.
+//!
+//! It used to blend places between one step and the next, and run animations on by
+//! the part of a step that had passed. The two did not go together (a place was
+//! drawn behind its step and a pose ahead of it), which showed as feet slipping
+//! over the ground and as a pose jumping back when a step changed the animation.
 
 use bevy::prelude::*;
 
@@ -13,8 +20,9 @@ pub const STEPS_PER_SECOND: f64 = 30.0;
 /// The original measures time in sixtieths of a second, so one logic step is two.
 pub const SIXTIETHS_PER_STEP: f32 = (60.0 / STEPS_PER_SECOND) as f32;
 
-/// Where game logic has put an entity. Logic moves `current` once per step; the
-/// entity's [`Transform`] is blended from the previous step's value towards it.
+/// Where game logic has put an entity. Logic moves `current` once per step, and
+/// the entity's [`Transform`] is that; where it was a step before is kept for
+/// whoever asks how it moved.
 #[derive(Component, Clone, Copy)]
 pub struct Stepped {
     previous: Transform,
@@ -39,14 +47,11 @@ pub fn remember(mut stepped: Query<&mut Stepped>) {
     }
 }
 
-/// Before drawing, places each stepped entity part-way between its last two steps.
-pub fn smooth(fixed: Res<Time<Fixed>>, mut stepped: Query<(&Stepped, &mut Transform)>) {
-    let alpha = fixed.overstep_fraction();
+/// Before drawing, places each stepped entity where its last step left it.
+pub fn smooth(mut stepped: Query<(&Stepped, &mut Transform)>) {
     for (stepped, mut transform) in &mut stepped {
-        *transform = Transform {
-            translation: stepped.previous.translation.lerp(stepped.current.translation, alpha),
-            rotation: stepped.previous.rotation.slerp(stepped.current.rotation, alpha),
-            scale: stepped.previous.scale.lerp(stepped.current.scale, alpha),
-        };
+        if *transform != stepped.current {
+            *transform = stepped.current;
+        }
     }
 }

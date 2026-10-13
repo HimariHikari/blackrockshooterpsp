@@ -56,6 +56,32 @@ Last brought up to date: 9 October 2026.
       there, sound included (tried whole: 3 minutes, 1.4 GB)
 - [x] GitHub builds the Windows bundle itself, and release `v0.1.0` has it
 
+## Seen in play (reported 13 October 2026)
+
+- [x] Bars at the left and right in cutscenes, and the level showing beside a
+      still picture or through a fade: the 3D picture filled the whole window,
+      which is a little wider than the PSP's screen, and some things covered
+      only the screen. Now the world is drawn in the screen's own shape and
+      all beside it is black, in every mode and any shape of window. (Tried
+      unattended; to be confirmed in play.)
+- [x] Characters gone for a split second: the rule that leaves out a model the
+      camera is right on was asked with the camera where the frame before had
+      it, so a cut could hide someone for a moment. Now asked once the camera
+      is placed. (To be confirmed in play.)
+- [x] Feet slipping and animations jumping: places were drawn behind the
+      game's step and poses ahead of it. The world is now drawn where each of
+      the game's thirty steps a second leaves it, as the PSP draws it, at any
+      display rate. (Measured in bursts of pictures; to be confirmed in play.)
+- [ ] A tail of hers lashing across the screen just after a cut
+      (`docs/compare/tail_lash_after_cut_port.png`, about 126 s into the
+      opening story). Her tails are chains kept in the world, and a script
+      that puts her somewhere else leaves them behind for a moment. The
+      original's code has nothing that puts them back either, so what it shows
+      there has to be looked at in the walkthrough before this is changed.
+- [ ] Mouths that sometimes do not move while someone speaks: not yet seen in
+      my own runs; to be looked for with the voices playing.
+- [ ] "Model bits bugging out" other than the tails: nothing else found yet.
+
 ## Still to do
 
 ### Gameplay not yet proven in play
@@ -111,6 +137,11 @@ Last brought up to date: 9 October 2026.
 - [ ] The release bundle from GitHub, unzipped and used
 - [ ] `brs-setup`'s two windows (choose the .iso, choose the folder)
 - [ ] `brs-setup` fetching ffmpeg on a PC that has none
+
+### Known difference
+- The PSP's menus are drawn sixty times a second and its world thirty. The
+  port draws its window as often as the display allows and moves the world
+  thirty times a second, so the menus are at least as smooth as the PSP's.
 
 ## Left out on purpose
 - The PSP's data install and its memory-stick windows (nothing to install on a PC)

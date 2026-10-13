@@ -245,7 +245,6 @@ fn draw_marks(
     actors: Query<(&super::Actor, &super::MarkNode)>,
     places: Query<&GlobalTransform>,
     camera: Single<(&Camera, &GlobalTransform), With<super::FollowCamera>>,
-    seen: Res<brs_engine::canvas::Seen>,
     steps: Res<Time<Fixed>>,
     mut canvas: ResMut<Canvas>,
 ) {
@@ -255,8 +254,8 @@ fn draw_marks(
     }
     let (camera, view) = *camera;
     let depth = |point: Vec3| -view.affine().inverse().transform_point3(point).z;
-    // Where on the screen the camera has a point, of all it sees.
-    let on_screen = |point: Vec3| camera.world_to_ndc(view, point).map(|to| seen.0.min + Vec2::new(to.x + 1.0, 1.0 - to.y) * 0.5 * seen.0.size());
+    // Where on the screen the camera has a point: what it sees is the screen.
+    let on_screen = |point: Vec3| camera.world_to_ndc(view, point).map(|to| Vec2::new(to.x + 1.0, 1.0 - to.y) * 0.5 * SCREEN.size());
     for (actor, node) in &actors {
         let Some(character) = scene.characters.get(&actor.id).filter(|character| !character.hidden()) else { continue };
         // The tile of one a mission is after stands for as long as it is that.
@@ -285,7 +284,7 @@ fn draw_marks(
     if !scene.flag(TRAP_SIGNS_OFF) {
         for character in scene.characters.values().filter(|character| !character.hidden()) {
             let Some((place, frames)) = character.sign.filter(|&(place, _)| depth(place) > 0.0) else { continue };
-            if let Some(at) = on_screen(place).filter(|&at| seen.0.contains(at)) {
+            if let Some(at) = on_screen(place).filter(|&at| SCREEN.contains(at)) {
                 mark::draw_of_trap(&mut canvas, &layouts.signs, (frames as f32 + steps.overstep_fraction()) * 2.0, at);
             }
         }
@@ -301,7 +300,7 @@ fn draw_marks(
         if trap.centre.distance(her.position) > reach || depth(trap.centre) < 0.0 {
             continue;
         }
-        if let Some(at) = on_screen(trap.centre).filter(|&at| seen.0.contains(at)) {
+        if let Some(at) = on_screen(trap.centre).filter(|&at| SCREEN.contains(at)) {
             let frames = (trap.sign_frames as f32 + steps.overstep_fraction()) * 2.0;
             mark::draw_of_trap(&mut canvas, &layouts.signs, frames, at);
         }
@@ -329,7 +328,6 @@ fn draw_action(
     progress: Res<Progress>,
     layouts: Res<Layouts>,
     camera: Single<(&Camera, &GlobalTransform), With<super::FollowCamera>>,
-    seen: Res<brs_engine::canvas::Seen>,
     steps: Res<Time<Fixed>>,
     mut canvas: ResMut<Canvas>,
 ) {
@@ -343,7 +341,7 @@ fn draw_action(
     // In front of the camera, it is where the camera has it of all it sees.
     let ahead = -transform.affine().inverse().transform_point3(over).z;
     let Some(to) = camera.world_to_ndc(transform, over).filter(|_| ahead > 0.0) else { return };
-    let at = seen.0.min + Vec2::new(to.x + 1.0, 1.0 - to.y) * 0.5 * seen.0.size();
+    let at = Vec2::new(to.x + 1.0, 1.0 - to.y) * 0.5 * SCREEN.size();
     action::draw(&mut canvas, &layouts.signs, &showing, at, steps.overstep_fraction());
 }
 

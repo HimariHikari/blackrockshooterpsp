@@ -4,6 +4,9 @@ rem after it (e.g.  play.cmd --battle STG01_02 --group 3 --level 30).
 rem It starts the copy kept for playing (target\debug\brs-play.exe) if there is
 rem one, so that the game can be rebuilt while it is open; else the build itself.
 cd /d "%~dp0"
+rem The copy is brought up to the latest build first, where it can be (not while
+rem a game started from it is still open).
+if exist target\debug\brs-game.exe copy /y target\debug\brs-game.exe target\debug\brs-play.exe >nul 2>nul
 if exist target\debug\brs-play.exe (
     start "" target\debug\brs-play.exe %*
 ) else if exist target\debug\brs-game.exe (
