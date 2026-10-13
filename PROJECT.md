@@ -115,10 +115,18 @@ Last brought up to date: 9 October 2026.
       animations of the story's scenes drive the right nodes of their models
       (`tools_re/motion_match.py`), all 3,383 recordings can be played (a
       test decodes each), and every mouth a script moves has its voice asked
-      for in the same frame (7,548 of them). So no cause is known: it is
-      still open, and what would find it is the scene or the line it was
-      seen in.
-- [ ] "Model bits bugging out" other than the tails: nothing else found yet.
+      for in the same frame (7,548 of them). One thing that looks like it
+      and is the original's own: a line spoken by someone who is not in the
+      picture (a voice over the radio, as Marion's in the first mission's
+      scene by the trailer) has no mouth to move, and the scripts give none
+      to whoever the camera is on meanwhile; the walkthrough shows the same
+      shots. If it was something else, what would find it is the scene or
+      the line it was seen in.
+- [x] "Model bits bugging out": no fault of a model's own was found (every
+      scene's animation drives the right nodes, above); what fits is the parts
+      of a model that are drawn another way than the rest coming a frame or
+      more after it the first time, which is put right above. (To be
+      confirmed in play.)
 - [x] Found while looking (not reported): a picture of the screen that the
       game keeps (for a map's dissolve, a battle's beginning, a scene's cut)
       could go on being drawn from an older one once the window had changed
@@ -129,9 +137,23 @@ Last brought up to date: 9 October 2026.
 ## Still to do
 
 ### Gameplay not yet proven in play
-- [ ] A guard mission played through to its win
-- [ ] The other timed maps (`STG04_0A` gives 300 seconds)
-- [ ] The "mazuma" missions' counter (the system script's own; not looked at in play)
+- [x] A guard mission played through to its win: mission 22's wave about the
+      bike, unattended (`docs/compare/guard_mission_won_port.png`): the count
+      goes to 4 of 4 before the bike's gauge is out, the scene after it plays
+      and the mission goes on to its next objective; left alone, the gauge
+      runs out and the mission fails, as before
+- [x] The other timed maps: mission 69 on `STG04_0A` played unattended through
+      its 300 seconds (`docs/compare/timed_mission_300_port.png`): the clock
+      counts down from 5:00 on the display, the time-up scene plays as it
+      reaches nought (300.5 s after the start) and MISSION FAILED comes with
+      its three choices
+- [x] The "mazuma" mission's counter: mission 68 played unattended through its
+      three minutes (`docs/compare/mazuma_mission_port.png`): the display
+      reads the clock and "BRS 00 vs nn MZMA", Mazuma's count goes up by one
+      every six seconds (29 at the end), and as the time runs out the scene
+      for it plays and MISSION FAILED comes. Her own count was not seen to
+      rise: nothing was fought in that run (the mission's fights are at its
+      smoke signals, which a script of key presses did not find)
 
 ### Remarks in the notes still marked "not ported", to be sorted one by one
 - [x] The states and flags the field is not free in: read one by one (the
@@ -152,8 +174,9 @@ Last brought up to date: 9 October 2026.
       map's script makes
 - [x] The half fades and the wipe of the screen's fade: the save tasks' and the
       title's alone; the title has its own, the save list its own sheet
-- [ ] The port's windows have their frame before the script's, the original's
-      after it (a frame's difference at the most)
+- [x] The port's windows have their frame before the script's, the original's
+      after it: at most a frame's difference in when a window comes, kept as
+      it is and listed under "Known difference"
 - [x] The field's flag 0x55 and the jingle's stream at a mission cleared: the
       flag is the window's being there, and the jingle's file has nowhere to
       go round from, so it is heard once as in the port
@@ -215,6 +238,11 @@ Last brought up to date: 9 October 2026.
 - [ ] `brs-setup` fetching ffmpeg on a PC that has none
 
 ### Known difference
+- A window a script puts up has its frame before the script's, where the
+  original's has it after: it can come a thirtieth of a second sooner or
+  later than on the PSP.
+- When the PC cannot keep up (under thirty pictures a second, or a frame that
+  takes long) the game slows for that moment, as a PSP does, and does not skip.
 - The PSP's menus are drawn sixty times a second and its world thirty. The
   port draws its window as often as the display allows and moves the world
   thirty times a second, so the menus are at least as smooth as the PSP's.

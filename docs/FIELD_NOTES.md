@@ -1433,6 +1433,23 @@ enemy on and gives another sixty. Neither has been found in the walkthrough
 yet: mission 28 is none of the story's, and of mission 22 (6740 to 7869 s) what
 was seen between 7300 and 7780 s were the grenades ("n/4", 7240 to 7605) and a
 wave of three (7692 to 7734), with advertisements on almost every jump.
+
+Tried again on 2026-10-13, each to its end. The guarding won
+(`docs/compare/guard_mission_won_port.png`): the same start with a script that
+runs at each enemy in turn and goes round the taxi that stands between
+(`wait:5,seek:5,seek:3,seek:3,seek:2,to-300/-500:1.5,seek:2.5,to-700/-100:1.5,
+seek:2.5,to-400/500:1.5,seek:2.5,...`): the count goes to 4 of 4 with the gauge
+not yet out, event 695 plays and the display is back at "Determine where to use
+the grenades 2/5". Mission 69, on `STG04_0A`, which its map's script gives 300
+seconds (`--mission 69 --skip-battles --skip-messages --level 50 --script
+wait:330`; `timed_mission_300_port.png`): the clock runs from 5:00, event 475
+plays 300.5 s after the mission's start and MISSION FAILED comes. Mission 68,
+on `STG04_0F`, the one against Mazuma, which has 180 seconds
+(`mazuma_mission_port.png`): the display's two lines are the clock and "BRS 00
+vs nn MZMA", the second number one more every six seconds (the system script's
+`sub_16cc`, each 0x5A000 of the field's time) to 29, and at the end event 246
+and MISSION FAILED. Her own number is the game's variable 237, which that run
+had no fight to raise.
 - `enter_stage_select`: makes her whole; if the mission was cleared (220 = 200) its
   state becomes 255, and every mission whose required missions (eight bytes at
   record + 0x1C) are all cleared and whose required flag (record + 0x28) is set
