@@ -218,6 +218,15 @@ Last brought up to date: 9 October 2026.
 - [x] Battle: the sky's own near and far planes: every enemy's script was
       gone through, and the 89 calls of that function all ask for the other
       thing it does; none asks for the sky's planes, so there is nothing to port
+- [x] Battle: "Survival Limit" (mission 66): nothing gives her HP back in its
+      battles (items, healing effects, regeneration, drains, Aftercare), as
+      0x97418 has it; the port only held back the level's heal (2026-10-14)
+- [x] The ride's glare: every course sets the glare to 100 as its road is
+      built, and the walkthrough's haze is 1 + 100/255 times the fog's colour;
+      the port's ride had none and now has it, measured to within a few parts
+      in 255. The port had read that word as a "loudness" it never used
+- [x] A battle map's glare (its script's seventh figure): measured in the
+      walkthrough and not seen there, as the port has it (no glare in battles)
 - [x] Menu: the sign of loading and the frozen picture: nothing loads slowly
       enough on a PC to show a sign for, and the field standing still is the
       frozen picture. The routine noted there as doing something to the sound

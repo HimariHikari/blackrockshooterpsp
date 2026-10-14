@@ -727,5 +727,13 @@ pub fn plugin(app: &mut App) {
         .add_systems(OnEnter(Mode::Ride), begin)
         .add_systems(OnExit(Mode::Ride), end)
         .add_systems(FixedUpdate, step.before(EngineSystems::Animate).run_if(in_state(Mode::Ride).and_then(not_paused)))
-        .add_systems(Update, (show_models, show_shadows, show_scenery, show_camera, show_display).chain().run_if(in_state(Mode::Ride)));
+        .add_systems(Update, (show_models, show_shadows, show_scenery, show_camera, show_display, show_glare).chain().run_if(in_state(Mode::Ride)));
+}
+
+/// The glare over the ride, added to the scene's picture as on the field.
+fn show_glare(riding: Option<Res<Riding>>, mut glare: ResMut<brs_engine::canvas::Glare>) {
+    let level = riding.map_or(0.0, |riding| riding.ride.glare.shown());
+    if glare.0 != level {
+        glare.0 = level;
+    }
 }

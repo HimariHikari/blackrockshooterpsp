@@ -264,7 +264,10 @@ pub struct RoadTables {
     pub first_lane: f32,
     /// The piece that is the sky, or -1.
     pub sky: i8,
-    pub loudness: i32,
+    /// How strong the glare over the ride is, of 255 (+ 0x18: 0x139368 hands it to
+    /// the game's word 5, 0x149024, which gives it to the glare's task): 100 on
+    /// every course.
+    pub glare: i32,
     /// What the screen is cleared to before the ride is drawn (0x147620).
     pub backdrop: [f32; 3],
     /// The colour of the light on what is on the road: the open road's, then
@@ -358,7 +361,7 @@ impl RoadTables {
             lane_width: f32_at(map, 0)?,
             first_lane: f32_at(map, 4)?,
             sky: i8_at(map, 0x14)?,
-            loudness: i32_at(map, 0x18)?,
+            glare: i32_at(map, 0x18)?,
             backdrop: three(0x1c)?,
             lights,
             views,
@@ -513,6 +516,7 @@ pub mod tests {
                 let gate = Gate::read(record);
                 assert!(gate.lane < LANES && gate.row < road.rows.len(), "{pack}: {gate:?}");
             }
+            assert_eq!(road.glare, 100, "{pack}");
             eprintln!("{pack}: {} rows, {} met, {} gates", road.rows.len(), course.enemies.len() / ENEMY_RECORD, course.gates.len() / TRAP_RECORD);
         }
         // The story's second course: a hundred rows, the first gate the start's.

@@ -180,9 +180,8 @@ impl PauseAssets {
 }
 
 /// What the pause is made for (0x12D66C), by the numbers the game has for it.
-/// Not all of them are asked for by what the port has yet: a scene that is not
-/// to be skipped is one whose script has said so (the field's flag 0x48), and
-/// the ride is not ported.
+/// The ride asks for its own (`bike/show.rs`); the first is a scene whose script
+/// has said it is not to be skipped (the field's flag 0x48).
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Kind {

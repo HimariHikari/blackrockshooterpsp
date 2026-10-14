@@ -10,7 +10,7 @@ views' fog and what is drawn how far, the light by where a model is, the display
 its sounds, voices and tune, its effects, its talk, its pause, and the way to it
 from the field and back (`--ride <course>` rides one alone; with no field there
 its talk is taken as said after four seconds).
-**Not yet**: the loudness the road's table has (word 5), and whether a sound
+**Not yet**: whether a sound
 still plays (`n4c` takes one that was begun as playing). No script gives a character a piece (`n19`), so those have
 nothing to be for.
 
@@ -159,7 +159,7 @@ One block of 0x73ED0 bytes, kept at 0x172F60 (0x148A80 gives it). What is in it:
 | + 0x73E14 | word 4 |
 | + 0x73E18 | twenty-three sounds playing, by slot (0x149624 begins one, 0x14979C stops it) |
 | + 0x73E74 | word 2: the frames counted by `n0d` |
-| + 0x73E80 | word 5: a loudness, 0 to 255 |
+| + 0x73E80 | word 5: the glare, 0 to 255, which 0x149024 gives the glare's task (message 0x1003) |
 | + 0x73EA0 | a resource of the common game's (kind 3) |
 | + 0x73EA8, + 0x73EAC | the next number for a character (from 0x100) and for a trap |
 
@@ -201,7 +201,8 @@ after it as its beginning. 0x141D90 puts one chip beside or after another.
 **Building it** (0x139368). From `map_tbl`: the lanes' width (+ 0, 250), where
 lane 0 is across (+ 4, 500: lane `k` begins at `x = 500 - 250 k`, so lane 2 is
 the middle), how many rows (+ 0xC, 100), the piece that is the sky (+ 0x14, a
-byte), a loudness (+ 0x18), the colour the screen is cleared to (+ 0x1C: 0.1,
+byte), the glare (+ 0x18, 100 on every course: word 5, see the field's
+notes, "The glare"; the walkthrough's ride has it), the colour the screen is cleared to (+ 0x1C: 0.1,
 0.1, 0.2), five colours of light (+ 0x28, twelve bytes each) and from + 0x64
 eight numbers for each of the three views (see "How it is drawn"). For each row, `chip_lst` has three bytes: two
 patterns of scenery and the row's kind of line. A row is five chips, one a lane,

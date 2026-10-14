@@ -136,17 +136,21 @@ pub struct Terms {
     pub half_experience: bool,
     /// Going up a level does not make her whole (0x37F08).
     pub no_level_heal: bool,
+    /// Nothing gives her HP back in the battle (0x97418, which every gift of HP
+    /// to her asks first: 0x98B8C, by way of an item, a skill or 0x8DE18).
+    pub unhealed: bool,
 }
 
 impl Terms {
-    /// The missions in which experience counts for half, and the one in which a
-    /// level gained does not heal.
+    /// The missions in which experience counts for half, and the one in which
+    /// nothing heals her ("Survival Limit").
     const HALF_EXPERIENCE: [i32; 6] = [5, 25, 45, 65, 85, 102];
-    const NO_LEVEL_HEAL: i32 = 66;
+    const SURVIVAL_LIMIT: i32 = 66;
 
     /// The terms of the mission with this number (variable 10004).
     pub fn of_scenario(scenario: i32) -> Terms {
-        Terms { half_experience: Self::HALF_EXPERIENCE.contains(&scenario), no_level_heal: scenario == Self::NO_LEVEL_HEAL }
+        let survival = scenario == Self::SURVIVAL_LIMIT;
+        Terms { half_experience: Self::HALF_EXPERIENCE.contains(&scenario), no_level_heal: survival, unhealed: survival }
     }
 }
 
@@ -784,6 +788,7 @@ fn setup(
     // The player, with her hair's animation layered over whatever her body does.
     info!("the player's figures: {:?}", source.stats);
     let mut actor = PcActor::new(source.stats.max_hp, source.stats.hp, &stage, &source.tunables);
+    actor.unhealed = source.terms.unhealed;
     // Her skills that act of themselves, for this battle (0x9F79C).
     let of_themselves = skills.of_themselves(progress.as_deref(), &automatic.0);
     if !of_themselves.is_empty() {
@@ -1299,9 +1304,9 @@ mod tests {
     fn a_few_missions_have_terms_of_their_own() {
         assert_eq!(Terms::of_scenario(0), Terms::default());
         for scenario in [5, 25, 45, 65, 85, 102] {
-            assert_eq!(Terms::of_scenario(scenario), Terms { half_experience: true, no_level_heal: false });
+            assert_eq!(Terms::of_scenario(scenario), Terms { half_experience: true, no_level_heal: false, unhealed: false });
         }
-        assert_eq!(Terms::of_scenario(66), Terms { half_experience: false, no_level_heal: true });
+        assert_eq!(Terms::of_scenario(66), Terms { half_experience: false, no_level_heal: true, unhealed: true });
     }
 
     #[test]

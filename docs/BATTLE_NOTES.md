@@ -2901,7 +2901,13 @@ at once when cross is pressed (0x383A0); either way it comes to this (0x37E24):
   `n` when going up from level `n`: 0x12B3F0 HP, 0x12B410 attack, 0x12B430 defence,
   0x12B450 special attack; each through 0x14D2EC, which caps them);
 - having gained a level she is given all her HP (0xFAC then 0xF44), except when
-  variable 10004 is 66 (0x37F08);
+  variable 10004 is 66 (0x37F08), the mission "Survival Limit", in whose
+  battles nothing gives her HP back either: every gift of HP to her goes
+  through 0x98B8C (an item, 0x981BC; what a skill of hers gives as a battle is
+  won, 0x9F9E0; an effect that gives it, a regeneration and a drain, all by
+  0x8DE18), which first asks 0x97418 whether variable 10004 is 66 and then
+  gives nothing and puts no number up. In the port `Terms::unhealed` and
+  `PcActor::heal` (2026-10-14; before then only the level's heal was held back);
 - then 0x14B908 is called, which is not read yet.
 
 The items are added to what she carries afterwards (0x37F44, with 0x14D594 for each

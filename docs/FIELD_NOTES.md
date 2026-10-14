@@ -3014,9 +3014,25 @@ read back, on the game's own numbers). In the opening hall, where the script
 has just called `s153(95)`, the port's picture then has the walkthrough's
 colours: the backdrop 115, 123, 125 against 114, 122, 125 at 22.4 s, the floor
 51, 44, 48 against 50, 45, 49 (it is 37 in 100 lighter than without). Not
-ported: the trace of the frame before in the small picture (8 in 255), the
-task's second strength (its + 0x1C, which no map's script sets), and a glare
-over anything but the field's scene.
+ported: the trace of the frame before in the small picture (8 in 255) and the
+task's second strength (its + 0x1C, which no map's script sets).
+
+Two others set the same task (every sender of its messages was listed on
+2026-10-14). The ride on the bike sets it to its road's figure as the road is
+built (`BIKE_NOTES.md`, word 5: 100 on every course), and the walkthrough has
+it whole: the ride's far haze, which is the fog's colour alone, is (194, 215,
+177) there against the port's (140, 158, 127), 1 + 100/255 times it in every
+part; the ride now shows it (`bike/show.rs`, `show_glare`) and its haze comes
+out (195, 220, 177) (`docs/compare/bike_glare_*`). A battle's map sets it too,
+from its script's seventh figure (0x96EF8 in `BtMapActor`: 95 on the first
+stage's), but nothing of it is seen: the same wall of the first stage's battle
+map has the same spread of brightness in the walkthrough (quarters 84, 120,
+144) as in the port without any glare (89, 124, 148), where a glare of 95 would
+lift the darker quarter by a third (`docs/compare/battle_no_glare_*`). Why it
+does not show (the task's bit 4 left set by the field's scenes, or a battle's
+drawing marking nothing) has not been followed; the port draws no glare over a
+battle, as the walkthrough has it. The title turns the glare off (0x1193A8,
+message 0x1006).
 
 **Things held in a scene** (`Staging::prop`, `Character::props`, and the
 models in `show_characters`). An event's bundle has a slot for the things its

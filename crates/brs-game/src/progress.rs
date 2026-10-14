@@ -129,7 +129,8 @@ impl Progress {
 
     /// Takes a battle's figures into the counts the missions go by, as the field does
     /// when it comes back from one (0xD893C). The battle's time goes to the mission's
-    /// clock, which the field's system script keeps; that is not ported.
+    /// clock as well, which the field's system script keeps (`update_mis_time`,
+    /// called by `field::end_battle`).
     pub fn count_battle(&mut self, tally: &Tally) {
         const MOST: i32 = 999_999;
         let left = self.variable(variable::DAMAGE_LEFT);

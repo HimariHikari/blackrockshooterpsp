@@ -21,7 +21,7 @@ use super::tables::{
     ROW, STATE_LEN, SYSTEM_PACK, SYSTEM_TABLES, TRAP_RECORD,
 };
 use crate::data::GameData;
-use crate::field::scene::{fade_kind, Fade};
+use crate::field::scene::{fade_kind, Fade, Glare};
 
 /// The time a frame takes (0x149CBC): the game runs at thirty a second, and the
 /// interface's frames are two to each of the game's (0x850).
@@ -141,7 +141,9 @@ pub struct Ride {
     pub sounds: Vec<SoundAsked>,
     /// Which of the mini-game's sounds are taken as playing.
     pub playing: [bool; SOUND_SLOTS],
-    pub loudness: i32,
+    /// The glare over the ride: the game's own task, which the ride sets as its
+    /// road is built (word 5) and which goes towards that a tenth a frame.
+    pub glare: Glare,
     /// The time this frame takes, and which of the paces the game goes at.
     pub time: f32,
     pub pace: usize,
@@ -271,7 +273,7 @@ impl Ride {
             talk: Talk::default(),
             sounds: Vec::new(),
             playing: [false; SOUND_SLOTS],
-            loudness: 0,
+            glare: Glare::default(),
             time: FRAME,
             pace: 1,
             frames: 0,
@@ -287,7 +289,8 @@ impl Ride {
             random: 0x2545_f491_4f6c_dd1d,
             faults: Vec::new(),
         };
-        ride.loudness = ride.road_tables.loudness.clamp(0, 255);
+        // Word 5 is held between nothing and all (0x149024).
+        ride.glare.set(ride.road_tables.glare.clamp(0, 255));
         // The stage's tune is asked for as its files are (the task's state 8).
         if let Some(stage) = ride.tables.stage(course) {
             ride.sounds.push(SoundAsked::Music(stage.tune));
@@ -378,6 +381,7 @@ impl Ride {
             }
         }
         self.fade.advance();
+        self.glare.step();
         // The display's frame, with the sound of a sign that comes (0x132F9C).
         let speeds = std::array::from_fn(|gear| self.state().number(tables::state::SPEEDS + gear * 4));
         if self.display.frame(speeds, STEPS) {

@@ -434,6 +434,8 @@ pub struct PcActor {
     /// The battle is decided (the root's + 0x88): from then on nothing takes HP off
     /// her (0x98C3C).
     pub spared: bool,
+    /// Nothing gives her HP back: the mission is "Survival Limit" (0x97418).
+    pub unhealed: bool,
     /// She has asked for her items (L, 0x9A534): the battle's item menu takes it.
     pub items_asked: bool,
     /// Set when a state ends with no HP left; the next step then starts her defeat
@@ -569,6 +571,7 @@ impl PcActor {
             damage_taken: 0,
             harmed: false,
             spared: false,
+            unhealed: false,
             items_asked: false,
             fallen: false,
             staged: false,
@@ -615,9 +618,13 @@ impl PcActor {
     }
 
     /// Gives her HP back, up to what she can have, and puts the number up by her
-    /// (0x98B8C). (In the original nothing is given while the save's variable
-    /// 10004 is 66, 0x97418: not ported.)
+    /// (0x98B8C). In the mission "Survival Limit" (the save's variable 10004 is
+    /// 66, 0x97418) nothing is given and nothing put up: what gave it, an item
+    /// used up, a skill's sound and look, is as it would be.
     pub fn heal(&mut self, amount: i32) {
+        if self.unhealed {
+            return;
+        }
         if amount > 0 {
             self.numbers.push((numbers::Kind::Heal, amount, None));
         }
@@ -1768,6 +1775,16 @@ mod tests {
         events: Vec<Event>,
     }
 
+    #[test]
+    fn in_survival_limit_nothing_gives_her_hp_back() {
+        let mut bench = Bench::new();
+        bench.actor.hp = 40.0;
+        bench.actor.heal(25);
+        assert_eq!((bench.actor.hp, bench.actor.numbers.len()), (65.0, 1));
+        bench.actor.unhealed = true;
+        bench.actor.heal(25);
+        assert_eq!((bench.actor.hp, bench.actor.numbers.len()), (65.0, 1), "no HP and no number");
+    }
     impl Bench {
         fn new() -> Bench {
             let (tunables, stage) = (tunables(), Stage::default());

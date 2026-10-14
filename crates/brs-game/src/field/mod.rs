@@ -877,9 +877,14 @@ fn step_glare(mut state: ResMut<FieldState>) {
     state.scene.work.glare.step();
 }
 
-/// The glare is over the field's scene, and over nothing else: not a battle's,
-/// nor her model in the menu, nor the screens the field is gone for.
+/// The glare is over the field's scene, and over nothing else of the field's:
+/// not a battle's (whose map sets one, 0x96EF8, which the walkthrough shows
+/// nothing of), nor her model in the menu, nor the screens the field is gone
+/// for. The ride shows its own (ike/show.rs).
 fn show_glare(state: Option<Res<FieldState>>, mode: Res<State<Mode>>, menu: Res<Menu>, mut glare: ResMut<brs_engine::canvas::Glare>) {
+    if *mode.get() == Mode::Ride {
+        return;
+    }
     let of_the_field = state.filter(|state| *mode.get() == Mode::Field && !menu.is_open() && state.hub.is_none() && state.title.is_none());
     let level = of_the_field.map_or(0.0, |state| state.scene.work.glare.shown());
     if glare.0 != level {
