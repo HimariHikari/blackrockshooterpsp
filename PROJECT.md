@@ -7,7 +7,7 @@ the original. This sheet is kept up as the work goes: `[x]` is done, `[ ]` is
 still to do. "Tried" means run in the port; "compared" means looked at beside the
 walkthrough.
 
-Last brought up to date: 9 October 2026.
+Last brought up to date: 14 October 2026.
 
 ## Done
 
@@ -15,7 +15,8 @@ Last brought up to date: 9 October 2026.
 - [x] Title, new game, load, options, gallery
 - [x] The stage select between missions, with her model, its camera and the
       flame at her eye as a mission is left for
-- [x] All 66 missions start and run their openings (swept unattended, no faults)
+- [x] All 73 missions start and run their openings (swept unattended, no faults;
+      every number the game has a mission for, 14 October 2026)
 - [x] The field: running, jumping between levels, traps, doors, terminals,
       containers' signs, enemies that roam, notice and chase, enemies that pop up
 - [x] Story scenes: cameras, faces, necks, held things, effects, films, voices
@@ -63,6 +64,34 @@ Last brought up to date: 9 October 2026.
       folder, and the game made there started
 - [x] GitHub builds the Windows bundle itself (the game and the how-to), and
       a release has it
+
+### Checked whole (14 October 2026)
+- [x] Every test of every crate, the two slow ones over all the data included:
+      683 pass
+- [x] Every file of the disc unpacked afresh with today's readers: no error in
+      any of the 29,427 textures, 363 models, 204 maps, 3,459 animations, the
+      scripts, tables, effects and sound banks; and the tree it makes is the
+      game's working data file for file (45,541 files, 670 MB)
+- [x] What the data asks of the port: all 157 functions the maps' scripts call
+      (419,042 calls), everything all 88 enemies' scripts need, every function
+      the 24 battle maps' and 2 cut-ins' scripts call, and 64 of the 71 the
+      events call, the other seven only in a test event the game never plays
+- [x] Every mission (73) run unattended with its story: no warning, error or
+      fault in any (`tools_re/mission_sweep.py`)
+- [x] Every enemy group (477) fought unattended (`tools_re/group_sweep.py`):
+      one battle ended the program, group 830's, whose enemy's bullet looks
+      like an effect with a piece that was built to be skinned and drawn
+      without a skin; fixed in the effect player for all effects. The only
+      other thing said is in 22 groups where a Coffin called in asks for effect
+      203001, which no battle has a file of (it is in story scenes' only), so
+      the PSP shows nothing there either
+- [x] A new game from the title through the opening and its film, unattended
+- [x] How much of the original's code has been read: 68% of it by size, 47%
+      of its functions (`tools_re/code_coverage.py`): the menus 94%, the ride
+      77%, models and effects 76%, battles 70%, the field 65%, saves and sound
+      60%, the PSP's own libraries 27%. What is unread can still hold rules the
+      port lacks (the two found today were in code read before but not followed
+      through); none of the sweeps shows one
 
 ## Seen in play (reported 13 October 2026)
 

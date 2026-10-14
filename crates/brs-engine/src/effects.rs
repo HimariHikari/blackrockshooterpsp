@@ -154,7 +154,7 @@ impl Shape {
             .iter()
             .filter(|submesh| !submesh.indices.is_empty())
             .map(|submesh| Piece {
-                mesh: stores.meshes.add(build_mesh(submesh)),
+                mesh: stores.meshes.add(unskinned(build_mesh(submesh))),
                 picture: model.materials[submesh.material].texture.map(|texture| pictures[texture].clone()),
                 node: submesh.rigid.then(|| submesh.nodes[0]),
                 plain: !submesh.coloured,
@@ -199,6 +199,18 @@ impl Shape {
         }
         placed
     }
+}
+
+/// A mesh of an effect's model without what would have it skinned: an effect's
+/// pieces hang from one node or are drawn as the model has them at rest, and
+/// are never skinned. A mesh that has joints but no skin to go with them is
+/// drawn by the skinned way of drawing with nothing for it, which the graphics
+/// card refuses and which ends the program (a bullet of the enemies of
+/// `BCHR_HAD*`, effect 208004, has such a piece).
+fn unskinned(mut mesh: Mesh) -> Mesh {
+    mesh.remove_attribute(Mesh::ATTRIBUTE_JOINT_INDEX);
+    mesh.remove_attribute(Mesh::ATTRIBUTE_JOINT_WEIGHT);
+    mesh
 }
 
 /// A picture of an effect, drawn smoothed (0x126CFC).
