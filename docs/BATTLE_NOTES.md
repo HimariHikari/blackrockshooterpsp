@@ -1075,7 +1075,7 @@ as do some of the bosses' (10012, 10014, 10200-10210, 10213-10221).
 | No. | Arguments | Meaning |
 | --- | --- | --- |
 | 1, 3 | string | debug print |
-| 4 | bank, id, volume, note | play a sound (0xBC3CC); returns the number to stop it by, or -1. Bank 0 is the one that is always loaded (`fld_pack.bin`), 1 the enemy's own (`btl_*.phd` in its archive), 2 its second (`fin_*.phd`, for finishing moves). The note is 64 for the sound as recorded: 221 of 237 calls; the rest play it lower or higher |
+| 4 | bank, id, volume, note | play a sound (0xBC3CC); returns the number to stop it by, or -1. Bank 0 is the one that is always loaded (`fld_pack.bin`), 1 the enemy's own (`btl_*.phd` in its archive), 2 its second (`fin_*.phd`, for finishing moves; bank 0 is the game's own at + 0x20018, 0x9CB28). The note is 64 for the sound as recorded: 221 of 237 calls; the rest play it lower or higher. The fifth boss's scene `chr_b_kal00_btl9000` asks for sound 128 of bank 0 beside 120, and tone 128 of that bank is empty on the disc (tones 125 to 129 have none): nothing is heard on the PSP either, and the port's warning that the bank has no sound 128 is the data's, not a fault (looked into 2026-10-14) |
 | 5 | handle | stop a sound |
 | 6, 13 | n | random number below n |
 | 7 | slot, name, loop, speed %, blend frames, force | play an animation unless it is already playing (or `force`); the speed applies to the slot |
